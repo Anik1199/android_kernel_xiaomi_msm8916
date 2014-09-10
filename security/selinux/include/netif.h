@@ -19,7 +19,9 @@
 
 void sel_netif_flush(void);
 
-int sel_netif_sid(int ifindex, u32 *sid);
+#include <net/net_namespace.h>
+
+int sel_netif_sid(struct net *ns, int ifindex, u32 *sid);
 
 #endif	/* _SELINUX_NETIF_H_ */
 
