@@ -11538,7 +11538,7 @@ VOS_STATUS wlan_hdd_restart_driver(hdd_context_t *pHddCtx)
    }
    /* Send reset FIQ to WCNSS to invoke SSR. */
 #ifdef HAVE_WCNSS_RESET_INTR
-   wcnss_reset_fiq(TRUE);
+   wcnss_reset_intr();
 #endif
  
    return status;
