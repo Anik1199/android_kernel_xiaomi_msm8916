@@ -994,6 +994,7 @@ static int ft5x06_fw_upgrade_start(struct i2c_client *client,
 	return 0;
 }
 
+#if CTP_LOCKDOWN_INFO
 static void fts_ctpm_read_lockdown(struct i2c_client *client, struct ft5x06_ts_data *data)
 {
 	u8 buf[128];
@@ -1070,6 +1071,7 @@ static void fts_ctpm_read_lockdown(struct i2c_client *client, struct ft5x06_ts_d
 				   lockdown_info[6], lockdown_info[7]);
 
 }
+#endif
 
 #if TPD_AUTO_UPGRADE
 static unsigned char CTPM_FW1[] = {
@@ -2047,7 +2049,7 @@ static int ft5x06_parse_dt(struct device *dev,
 	pdata->ignore_id_check = of_property_read_bool(np,
 						"focaltech,ignore-id-check");
 
-	rc = of_property_read_u32(np, "focaltech, family-id", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,family-id", &temp_val);
 	if (!rc)
 		pdata->family_id = temp_val;
 	else
@@ -2189,7 +2191,6 @@ static int hardwareinfo_set(struct ft5x06_ts_data *data, u8 value_name)
 	char firmware_ver[HARDWARE_MAX_ITEM_LONGTH];
 	char vendor_for_id[HARDWARE_MAX_ITEM_LONGTH];
 	char ic_name[HARDWARE_MAX_ITEM_LONGTH];
-	int err;
 
 	if (data->fw_vendor_id == VENDOR_BIEL_1080P)
 		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "BIEL_1080P");

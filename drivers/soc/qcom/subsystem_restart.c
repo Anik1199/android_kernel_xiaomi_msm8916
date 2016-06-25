@@ -43,6 +43,8 @@
 #include <asm/current.h>
 
 #define DISABLE_SSR 0x9889deed
+#define WT_SUBSYSTEM_REASTART_LEVEL "related"
+
 /* If set to 0x9889deed, call to subsystem_restart_dev() returns immediately */
 static uint disable_restart_work;
 module_param(disable_restart_work, uint, S_IRUGO | S_IWUSR);

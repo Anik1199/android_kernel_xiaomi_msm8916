@@ -2275,6 +2275,8 @@ int akm_compass_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
 	akm_compass_power_set(s_akm, false);
 
+	hardwareinfo_set_prop(HARDWARE_MAGNETOMETER,"akm09911"); //wingtech hardware_info
+
 	dev_info(&client->dev, "successfully probed.");
 	return 0;
 

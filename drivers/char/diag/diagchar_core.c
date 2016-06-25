@@ -1,4 +1,5 @@
 /* Copyright (c) 2008-2015, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2016 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -328,7 +329,6 @@ fail:
 	return -ENOMEM;
 }
 
-
 static int diag_remove_client_entry(struct file *file)
 {
 	int i = -1;
@@ -336,7 +336,7 @@ static int diag_remove_client_entry(struct file *file)
 	struct diag_dci_client_tbl *dci_entry = NULL;
 	unsigned long flags;
 
-	if(!driver)
+	if (!driver)
 		return -ENOMEM;
 
 	mutex_lock(&driver->diag_file_mutex);

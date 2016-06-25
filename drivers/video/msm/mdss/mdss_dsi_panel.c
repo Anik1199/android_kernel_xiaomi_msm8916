@@ -37,7 +37,7 @@
 #define MIN_REFRESH_RATE 48
 #define DEFAULT_MDP_TRANSFER_TIME 14000
 
-extern char Lcm_name[HARDWARE_MAX_ITEM_LONGTH];
+extern char Lcm_name[HARDWARE_MAX_ITEM_LONGTH]; //wingtech hardware_info
 
 DEFINE_LED_TRIGGER(bl_led_trigger);
 
@@ -1870,6 +1870,7 @@ int mdss_dsi_panel_init(struct device_node *node,
 	} else {
 		pr_info("%s: Panel Name = %s\n", __func__, panel_name);
 		strlcpy(&pinfo->panel_name[0], panel_name, MDSS_MAX_PANEL_LEN);
+		strcpy(Lcm_name,panel_name); //wingtech hardware_info
 	}
 	rc = mdss_panel_parse_dt(node, ctrl_pdata);
 	if (rc) {

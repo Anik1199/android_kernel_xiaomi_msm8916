@@ -229,6 +229,7 @@ struct mpu6050_sensor {
 	struct workqueue_struct *data_wq;
 	struct delayed_work accel_poll_work;
 	struct delayed_work gyro_poll_work;
+	struct work_struct resume_work;
 	struct delayed_work fifo_flush_work;
 	struct mpu_reg_map reg;
 	struct mpu_chip_config cfg;
@@ -3025,12 +3026,19 @@ static int mpu_check_chip_type(struct mpu6050_sensor *sensor,
 	struct mpu_reg_map *reg;
 	s32 ret;
 
-	if (!strcmp(id->name, "mpu6050"))
+	if (!strcmp(id->name, "mpu6050")) {
 		sensor->chip_type = INV_MPU6050;
-	else if (!strcmp(id->name, "mpu6500"))
+		hardwareinfo_set_prop(HARDWARE_ACCELEROMETER, "mpu6881"); //wingtech hardware_info
+		hardwareinfo_set_prop(HARDWARE_GYROSCOPE, "mpu6881"); //wingtech hardware_info
+	} else if (!strcmp(id->name, "mpu6500")) {
 		sensor->chip_type = INV_MPU6500;
-	else if (!strcmp(id->name, "mpu6xxx"))
+		hardwareinfo_set_prop(HARDWARE_ACCELEROMETER, "mpu6500"); //wingtech hardware_info
+		hardwareinfo_set_prop(HARDWARE_GYROSCOPE, "mpu6500"); //wingtech hardware_info
+	} else if (!strcmp(id->name, "mpu6xxx")) {
 		sensor->chip_type = INV_MPU6050;
+		hardwareinfo_set_prop(HARDWARE_ACCELEROMETER, "mpu6050"); //wingtech hardware_info
+		hardwareinfo_set_prop(HARDWARE_GYROSCOPE, "mpu6050"); //wingtech hardware_info
+	}
 	else
 		return -EPERM;
 
@@ -3054,9 +3062,15 @@ static int mpu_check_chip_type(struct mpu6050_sensor *sensor,
 
 		if (ret == MPU6500_ID) {
 			sensor->chip_type = INV_MPU6500;
+			hardwareinfo_set_prop(HARDWARE_ACCELEROMETER, "mpu6500"); //wingtech hardware_info
+			hardwareinfo_set_prop(HARDWARE_GYROSCOPE, "mpu6500"); //wingtech hardware_info
 		} else if (ret == MPU6050_ID) {
 			sensor->chip_type = INV_MPU6050;
+			hardwareinfo_set_prop(HARDWARE_ACCELEROMETER, "mpu6050"); //wingtech hardware_info
+			hardwareinfo_set_prop(HARDWARE_GYROSCOPE, "mpu6050"); //wingtech hardware_info
 		} else {
+			hardwareinfo_set_prop(HARDWARE_GYROSCOPE, "gyrosensor fail"); //wingtech hardware_info
+			hardwareinfo_set_prop(HARDWARE_ACCELEROMETER, "accelerometer fail"); //wingtech hardware_info
 			dev_err(&client->dev,
 				"Invalid chip ID %d\n", ret);
 			return -ENODEV;

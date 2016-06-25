@@ -861,7 +861,7 @@ static int sensor_parse_dt(struct device *dev,
 	pdata->exit = sensor_platform_hw_exit;
 	pdata->power_on = sensor_platform_hw_power_on;
 
-	rc = of_property_read_u32(np, "yas, position",
+	rc = of_property_read_u32(np, "yas,position",
 							  &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw delay read id\n");
@@ -1074,6 +1074,7 @@ static int yas_probe(struct i2c_client *i2c, const struct i2c_device_id *id)
 	}
 
 	dev_info(&i2c->dev, " yas537 successfully probed.");
+	hardwareinfo_set_prop(HARDWARE_MAGNETOMETER,"yas537"); //wingtech hardware_info
 	return 0;
 
 error_remove_sysfs:
@@ -1195,7 +1196,7 @@ MODULE_DEVICE_TABLE(i2c, yas_id);
 
 
 static struct of_device_id yas_match_table[] = {
-	{.compatible = "yamaha, yas537",},
+	{.compatible = "yamaha,yas537",},
 	{},
 };
 

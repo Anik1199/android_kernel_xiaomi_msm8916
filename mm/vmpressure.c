@@ -2,6 +2,7 @@
  * Linux VM pressure
  *
  * Copyright 2012 Linaro Ltd.
+ * Copyright (C) 2016 XiaoMi, Inc.
  *		  Anton Vorontsov <anton.vorontsov@linaro.org>
  *
  * Based on ideas from Andrew Morton, David Rientjes, KOSAKI Motohiro,

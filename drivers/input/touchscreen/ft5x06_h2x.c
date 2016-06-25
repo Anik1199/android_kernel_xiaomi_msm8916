@@ -1871,12 +1871,12 @@ static int ft5x06_get_dt_coords(struct device *dev, char *name,
 		return rc;
 	}
 
-	if (!strcmp(name, "focaltech, panel-coords")) {
+	if (!strcmp(name, "focaltech,panel-coords")) {
 		pdata->panel_minx = coords[0];
 		pdata->panel_miny = coords[1];
 		pdata->panel_maxx = coords[2];
 		pdata->panel_maxy = coords[3];
-	} else if (!strcmp(name, "focaltech, display-coords")) {
+	} else if (!strcmp(name, "focaltech,display-coords")) {
 		pdata->x_min = coords[0];
 		pdata->y_min = coords[1];
 		pdata->x_max = coords[2];
@@ -1899,98 +1899,98 @@ static int ft5x06_parse_dt(struct device *dev,
 	u32 button_map[MAX_BUTTONS];
 
 	pdata->name = "focaltech";
-	rc = of_property_read_string(np, "focaltech, name", &pdata->name);
+	rc = of_property_read_string(np, "focaltech,name", &pdata->name);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read name\n");
 		return rc;
 	}
 
-	rc = ft5x06_get_dt_coords(dev, "focaltech, panel-coords", pdata);
+	rc = ft5x06_get_dt_coords(dev, "focaltech,panel-coords", pdata);
 	if (rc && (rc != -EINVAL))
 		return rc;
 
-	rc = ft5x06_get_dt_coords(dev, "focaltech, display-coords", pdata);
+	rc = ft5x06_get_dt_coords(dev, "focaltech,display-coords", pdata);
 	if (rc)
 		return rc;
 
 	pdata->i2c_pull_up = of_property_read_bool(np,
-						 "focaltech, i2c-pull-up");
+						 "focaltech,i2c-pull-up");
 
 	pdata->no_force_update = of_property_read_bool(np,
-							 "focaltech, no-force-update");
+							 "focaltech,no-force-update");
 	/* reset, irq gpio info */
-	pdata->reset_gpio = of_get_named_gpio_flags(np, "focaltech, reset-gpio",
+	pdata->reset_gpio = of_get_named_gpio_flags(np, "focaltech,reset-gpio",
 						0, &pdata->reset_gpio_flags);
 	if (pdata->reset_gpio < 0)
 		return pdata->reset_gpio;
 
-	pdata->irq_gpio = of_get_named_gpio_flags(np, "focaltech, irq-gpio",
+	pdata->irq_gpio = of_get_named_gpio_flags(np, "focaltech,irq-gpio",
 					  0, &pdata->irq_gpio_flags);
 	if (pdata->irq_gpio < 0)
 		return pdata->irq_gpio;
 
 	pdata->fw_name = "ft_fw.bin";
-	rc = of_property_read_string(np, "focaltech, fw-name", &pdata->fw_name);
+	rc = of_property_read_string(np, "focaltech,fw-name", &pdata->fw_name);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw name\n");
 		return rc;
 	}
 
-	rc = of_property_read_u32(np, "focaltech, group-id", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,group-id", &temp_val);
 	if (!rc)
 		pdata->group_id = temp_val;
 	else
 		return rc;
 
-	rc = of_property_read_u32(np, "focaltech, hard-reset-delay-ms",
+	rc = of_property_read_u32(np, "focaltech,hard-reset-delay-ms",
 							  &temp_val);
 	if (!rc)
 		pdata->hard_rst_dly = temp_val;
 	else
 		return rc;
 
-	rc = of_property_read_u32(np, "focaltech, soft-reset-delay-ms",
+	rc = of_property_read_u32(np, "focaltech,soft-reset-delay-ms",
 							  &temp_val);
 	if (!rc)
 		pdata->soft_rst_dly = temp_val;
 	else
 		return rc;
 
-	rc = of_property_read_u32(np, "focaltech, num-max-touches", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,num-max-touches", &temp_val);
 	if (!rc)
 		pdata->num_max_touches = temp_val;
 	else
 		return rc;
 
-	rc = of_property_read_u32(np, "focaltech, fw-delay-aa-ms", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,fw-delay-aa-ms", &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw delay aa\n");
 		return rc;
 	} else if (rc != -EINVAL)
 		pdata->info.delay_aa =  temp_val;
 
-	rc = of_property_read_u32(np, "focaltech, fw-delay-55-ms", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,fw-delay-55-ms", &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw delay 55\n");
 		return rc;
 	} else if (rc != -EINVAL)
 		pdata->info.delay_55 =  temp_val;
 
-	rc = of_property_read_u32(np, "focaltech, fw-upgrade-id1", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,fw-upgrade-id1", &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw upgrade id1\n");
 		return rc;
 	} else if (rc != -EINVAL)
 		pdata->info.upgrade_id_1 =  temp_val;
 
-	rc = of_property_read_u32(np, "focaltech, fw-upgrade-id2", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,fw-upgrade-id2", &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw upgrade id2\n");
 		return rc;
 	} else if (rc != -EINVAL)
 		pdata->info.upgrade_id_2 =  temp_val;
 
-	rc = of_property_read_u32(np, "focaltech, fw-delay-readid-ms",
+	rc = of_property_read_u32(np, "focaltech,fw-delay-readid-ms",
 							  &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw delay read id\n");
@@ -1998,7 +1998,7 @@ static int ft5x06_parse_dt(struct device *dev,
 	} else if (rc != -EINVAL)
 		pdata->info.delay_readid =  temp_val;
 
-	rc = of_property_read_u32(np, "focaltech, fw-delay-era-flsh-ms",
+	rc = of_property_read_u32(np, "focaltech,fw-delay-era-flsh-ms",
 							  &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw delay erase flash\n");
@@ -2007,28 +2007,28 @@ static int ft5x06_parse_dt(struct device *dev,
 		pdata->info.delay_erase_flash =  temp_val;
 
 	pdata->info.auto_cal = of_property_read_bool(np,
-						   "focaltech, fw-auto-cal");
+						   "focaltech,fw-auto-cal");
 
 	pdata->fw_vkey_support = of_property_read_bool(np,
-							 "focaltech, fw-vkey-support");
+							 "focaltech,fw-vkey-support");
 
 	pdata->ignore_id_check = of_property_read_bool(np,
-							 "focaltech, ignore-id-check");
+							 "focaltech,ignore-id-check");
 
-	rc = of_property_read_u32(np, "focaltech, family-id", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,family-id", &temp_val);
 	if (!rc)
 		pdata->family_id = temp_val;
 	else
 		return rc;
 
-	prop = of_find_property(np, "focaltech, button-map", NULL);
+	prop = of_find_property(np, "focaltech,button-map", NULL);
 	if (prop) {
 		num_buttons = prop->length / sizeof(temp_val);
 		if (num_buttons > MAX_BUTTONS)
 			return -EINVAL;
 
 		rc = of_property_read_u32_array(np,
-										"focaltech, button-map", button_map,
+										"focaltech,button-map", button_map,
 										num_buttons);
 		if (rc) {
 			dev_err(dev, "Unable to read key codes\n");
@@ -2375,6 +2375,12 @@ static int hardwareinfo_set(struct ft5x06_ts_data *data, u8 value_name)
 		snprintf(ic_name, strlen("Other IC "), "Other IC");
 	}
 	snprintf(firmware_ver, HARDWARE_MAX_ITEM_LONGTH, "%s, %s, 0x%x", vendor_for_id, ic_name, data->fw_ver[0]);
+
+		/*wingtech hardware_info*/
+		err = hardwareinfo_set_prop(HARDWARE_TP,firmware_ver);
+		if (err < 0)
+		return -1;
+
 	return 0;
 }
 #if FTS_PROC_APK_DEBUG
@@ -3009,7 +3015,7 @@ MODULE_DEVICE_TABLE(i2c, ft5x06_ts_id);
 
 #ifdef CONFIG_OF
 static struct of_device_id ft5x06_match_table[] = {
-	{.compatible = "focaltech, 5x06",},
+	{.compatible = "focaltech,5x06",},
 	{},
 };
 #else
