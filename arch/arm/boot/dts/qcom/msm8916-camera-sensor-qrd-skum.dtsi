@@ -14,7 +14,7 @@
 
 &tlmm_pinmux {
 	OCP8110_pins {
-		qcom,pins = <&gp 31>, <&gp 32>;
+		qcom,pins = <&gp 31>,<&gp 32>;
 		qcom,num-grp-pins = <2>;
 		qcom,pin-func = <0>;
 		label = "OCP8110_pins";
@@ -33,7 +33,7 @@
 		pinctrl-0 = <&OCP8110_default>;
 		qcom,flash-en = <&msm_gpio 31 0>;
 		qcom,flash-now = <&msm_gpio 32 0>;
-		qcom,op-seq = "flash_en", "flash_now";
+		qcom,op-seq = "flash_en","flash_now";
 		qcom,torch-seq-val = <1 0>;
 		qcom,flash-seq-val = <1 1>;
 		linux,name = "flashlight";
@@ -48,6 +48,7 @@
 		qcom,torch-source = <&flash_OCP8110>;
 	};
 };
+
 
 &cci {
 
@@ -83,14 +84,14 @@ eeprom0: qcom,eeprom@6c {
 		cam_vio-supply = <&pm8916_l6>;
 		cam_vana-supply = <&pm8916_l17>;
 		cam_vaf-supply = <&pm8916_l10>;
-		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana",
+		qcom,cam-vreg-name = "cam_vdig","cam_vio","cam_vana",
 							"cam_vaf";
 		qcom,cam-vreg-type = <0 0 0 0>;
 		qcom,cam-vreg-min-voltage = <1200000 1800000 2800000 2850000>;
 		qcom,cam-vreg-max-voltage = <1200000 1800000 2800000 2850000>;
 		qcom,cam-vreg-op-mode = <200000 200000 80000 100000>;
 
-		pinctrl-names = "cam_default", "cam_suspend";
+pinctrl-names = "cam_default","cam_suspend";
 		pinctrl-0 = <&cam_sensor_mclk0_default &cam_sensor_rear_default>;
 		pinctrl-1 = <&cam_sensor_mclk0_sleep &cam_sensor_rear_sleep>;
 		gpios = <&msm_gpio 26 0>,
@@ -103,7 +104,6 @@ eeprom0: qcom,eeprom@6c {
 		qcom,gpio-req-tbl-label = "CAMIF_MCLK",
 			"CAM_RESET1",
 			"CAM_STANDBY";
-
 		qcom,cam-power-seq-type = "sensor_vreg",
 			"sensor_vreg",
 			"sensor_vreg",
@@ -126,7 +126,7 @@ eeprom0: qcom,eeprom@6c {
 		qcom,cam-power-seq-delay = <1 10 10 5 10 10 10 10 10>;
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 			<&clock_gcc clk_gcc_camss_mclk0_clk>;
-		clock-names = "cam_src_clk", "cam_clk";
+		clock-names = "cam_src_clk","cam_clk";
 	};
 
 	qcom,camera@0 {
@@ -143,13 +143,13 @@ eeprom0: qcom,eeprom@6c {
 		cam_vana-supply = <&pm8916_l17>;
 		cam_vio-supply = <&pm8916_l6>;
 		cam_vaf-supply = <&pm8916_l10>;
-		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana",
+		qcom,cam-vreg-name = "cam_vdig","cam_vio","cam_vana",
 							"cam_vaf";
 		qcom,cam-vreg-type = <0 1 0 0>;
 		qcom,cam-vreg-min-voltage = <1200000 0 2850000 2800000>;
 		qcom,cam-vreg-max-voltage = <1200000 0 2850000 2800000>;
 		qcom,cam-vreg-op-mode = <200000 0 80000 100000>;
-		pinctrl-names = "cam_default", "cam_suspend";
+		pinctrl-names = "cam_default","cam_suspend";
 		pinctrl-0 = <&cam_sensor_mclk0_default &cam_sensor_rear_default>;
 		pinctrl-1 = <&cam_sensor_mclk0_sleep &cam_sensor_rear_sleep>;
 		gpios = <&msm_gpio 26 0>,
@@ -172,7 +172,7 @@ eeprom0: qcom,eeprom@6c {
 		status = "ok";
 		clocks = <&clock_gcc clk_mclk0_clk_src>,
 				<&clock_gcc clk_gcc_camss_mclk0_clk>;
-		clock-names = "cam_src_clk", "cam_clk";
+		clock-names = "cam_src_clk","cam_clk";
 	};
 
 	qcom,camera@1 {
@@ -186,13 +186,13 @@ eeprom0: qcom,eeprom@6c {
 		cam_vana-supply = <&pm8916_l17>;
 		cam_vio-supply = <&pm8916_l6>;
 		cam_vaf-supply = <&pm8916_l10>;
-		qcom,cam-vreg-name = "cam_vdig", "cam_vio", "cam_vana",
+		qcom,cam-vreg-name = "cam_vdig","cam_vio","cam_vana",
 							"cam_vaf";
 		qcom,cam-vreg-type = <0 1 0 0>;
 		qcom,cam-vreg-min-voltage = <1200000 0 2850000 2800000>;
 		qcom,cam-vreg-max-voltage = <1200000 0 2850000 2800000>;
 		qcom,cam-vreg-op-mode = <200000 0 80000 100000>;
-		pinctrl-names = "cam_default", "cam_suspend";
+		pinctrl-names = "cam_default","cam_suspend";
 		pinctrl-0 = <&cam_sensor_mclk1_default &cam_sensor_front_default>;
 		pinctrl-1 = <&cam_sensor_mclk1_sleep &cam_sensor_front_sleep>;
 		gpios = <&msm_gpio 27 0>,
@@ -212,7 +212,7 @@ eeprom0: qcom,eeprom@6c {
 		status = "ok";
 		clocks = <&clock_gcc clk_mclk1_clk_src>,
 				<&clock_gcc clk_gcc_camss_mclk1_clk>;
-		clock-names = "cam_src_clk", "cam_clk";
+		clock-names = "cam_src_clk","cam_clk";
 	};
-};
 
+};
