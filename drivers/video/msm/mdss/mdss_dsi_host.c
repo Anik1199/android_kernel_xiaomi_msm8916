@@ -1,4 +1,5 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2016 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -525,7 +526,7 @@ static void mdss_dsi_start_hs_clk_lane(struct mdss_dsi_ctrl_pdata *ctrl)
 
 	mutex_lock(&ctrl->clk_lane_mutex);
 	MDSS_XLOG(ctrl->ndx, ctrl->clk_lane_cnt, current->pid,
-			XLOG_FUNC_ENTRY);
+				XLOG_FUNC_ENTRY);
 	mdss_dsi_clk_ctrl(ctrl, DSI_ALL_CLKS, 1);
 	if (ctrl->clk_lane_cnt) {
 		pr_err("%s: ndx=%d do-wait, cnt=%d\n",
@@ -540,7 +541,7 @@ static void mdss_dsi_start_hs_clk_lane(struct mdss_dsi_ctrl_pdata *ctrl)
 				ctrl->ndx, ctrl->clk_lane_cnt);
 	mdss_dsi_clk_ctrl(ctrl, DSI_ALL_CLKS, 0);
 	MDSS_XLOG(ctrl->ndx, ctrl->clk_lane_cnt,
-			current->pid, XLOG_FUNC_EXIT);
+				current->pid, XLOG_FUNC_EXIT);
 	mutex_unlock(&ctrl->clk_lane_mutex);
 }
 
@@ -560,16 +561,16 @@ static void mdss_dsi_stop_hs_clk_lane(struct mdss_dsi_ctrl_pdata *ctrl)
 
 	mutex_lock(&ctrl->clk_lane_mutex);
 	MDSS_XLOG(ctrl->ndx, ctrl->clk_lane_cnt, current->pid,
-			XLOG_FUNC_ENTRY);
+				XLOG_FUNC_ENTRY);
 	if (ctrl->clk_lane_cnt == 0)	/* stopped already */
 		goto release;
 
 	mdss_dsi_clk_ctrl(ctrl, DSI_ALL_CLKS, 1);
 	/* fifo */
 	if (readl_poll_timeout(((ctrl->ctrl_base) + 0x000c),
-			   fifo,
-			   ((fifo & 0x11110000) == 0x11110000),
-			       100, 50000)) {
+				fifo,
+				((fifo & 0x11110000) == 0x11110000),
+				100, 50000)) {
 		pr_err("%s: fifo NOT empty, fifo=%x\n",
 					__func__, fifo);
 		goto end;
@@ -577,9 +578,9 @@ static void mdss_dsi_stop_hs_clk_lane(struct mdss_dsi_ctrl_pdata *ctrl)
 
 	/* data lane status */
 	if (readl_poll_timeout(((ctrl->ctrl_base) + 0x00a8),
-			   lane,
-			   ((lane & 0x000f) == 0x000f),
-			       100, 20000)) {
+				lane,
+				((lane & 0x000f) == 0x000f),
+				100, 20000)) {
 		pr_err("%s: datalane NOT stopped, lane=%x\n",
 					__func__, lane);
 	}
@@ -594,9 +595,8 @@ end:
 release:
 	pr_debug("%s: ndx=%d, cnt=%d\n", __func__,
 			ctrl->ndx, ctrl->clk_lane_cnt);
-
 	MDSS_XLOG(ctrl->ndx, ctrl->clk_lane_cnt,
-			current->pid, XLOG_FUNC_EXIT);
+				current->pid, XLOG_FUNC_EXIT);
 	mutex_unlock(&ctrl->clk_lane_mutex);
 }
 
@@ -957,13 +957,13 @@ void mdss_dsi_cmd_bta_sw_trigger(struct mdss_panel_data *pdata)
 	pr_debug("%s: BTA done, status = %d\n", __func__, status);
 }
 
-static int mdss_dsi_read_status(struct mdss_dsi_ctrl_pdata *ctrl)
+static int mdss_dsi_read_status(struct mdss_dsi_ctrl_pdata *ctrl, int i)
 {
 	struct dcs_cmd_req cmdreq;
 
 	memset(&cmdreq, 0, sizeof(cmdreq));
-	cmdreq.cmds = ctrl->status_cmds.cmds;
-	cmdreq.cmds_cnt = ctrl->status_cmds.cmd_cnt;
+	cmdreq.cmds = ctrl->status_cmds[i].cmds;
+	cmdreq.cmds_cnt = ctrl->status_cmds[i].cmd_cnt;
 	cmdreq.flags = CMD_REQ_COMMIT | CMD_CLK_CTRL | CMD_REQ_RX;
 	cmdreq.rlen = ctrl->status_cmds_rlen;
 	cmdreq.cb = NULL;
@@ -986,6 +986,8 @@ static int mdss_dsi_read_status(struct mdss_dsi_ctrl_pdata *ctrl)
 int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	int ret = 0;
+	int i, j;
+	u32 value;
 
 	if (ctrl_pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
@@ -994,28 +996,43 @@ int mdss_dsi_reg_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 
 	pr_debug("%s: Checking Register status\n", __func__);
 
-	mdss_dsi_clk_ctrl(ctrl_pdata, DSI_ALL_CLKS, 1);
+	for (i = 0; i < ctrl_pdata->status_cmds_num; i++) {
+		value = 0;
+		mdss_dsi_clk_ctrl(ctrl_pdata, DSI_ALL_CLKS, 1);
 
-	if (ctrl_pdata->status_cmds.link_state == DSI_HS_MODE)
-		mdss_dsi_set_tx_power_mode(0, &ctrl_pdata->panel_data);
+		if (ctrl_pdata->status_cmds[i].link_state == DSI_HS_MODE)
+			mdss_dsi_set_tx_power_mode(0, &ctrl_pdata->panel_data);
 
-	ret = mdss_dsi_read_status(ctrl_pdata);
+		ret = mdss_dsi_read_status(ctrl_pdata, i);
 
-	if (ctrl_pdata->status_cmds.link_state == DSI_HS_MODE)
-		mdss_dsi_set_tx_power_mode(1, &ctrl_pdata->panel_data);
+		if (ctrl_pdata->status_cmds[i].link_state == DSI_HS_MODE)
+			mdss_dsi_set_tx_power_mode(1, &ctrl_pdata->panel_data);
 
 	/*
 	 * mdss_dsi_read_status returns the number of bytes returned
 	 * by the panel. Success value is greater than zero and failure
 	 * case returns zero.
 	 */
-	if (ret > 0) {
-		ret = ctrl_pdata->check_read_status(ctrl_pdata);
-	} else {
-		pr_err("%s: Read status register returned error\n", __func__);
+		if (ret > 0) {
+			for (j = 0; j < ctrl_pdata->status_value[i][0]; j++)
+				value = (value << 8) | ctrl_pdata->status_buf.data[j];
+
+			if (value != ctrl_pdata->status_value[i][1]) {
+				pr_err("%s: Read back value from panel is incorrect: %x, i=%d\n",
+								__func__, value, i);
+				mdss_dsi_clk_ctrl(ctrl_pdata, DSI_ALL_CLKS, 0);
+				return -EINVAL;
+			} else {
+				mdss_dsi_clk_ctrl(ctrl_pdata, DSI_ALL_CLKS, 0);
+				ret = 1;
+			}
+		} else {
+			pr_err("%s: Read status register returned error\n", __func__);
+			mdss_dsi_clk_ctrl(ctrl_pdata, DSI_ALL_CLKS, 0);
+			return ret;
+		}
 	}
 
-	mdss_dsi_clk_ctrl(ctrl_pdata, DSI_ALL_CLKS, 0);
 	pr_debug("%s: Read register done with ret: %d\n", __func__, ret);
 
 	return ret;
