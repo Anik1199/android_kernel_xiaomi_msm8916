@@ -1154,7 +1154,8 @@ void mark_rodata_ro(void)
 	 * The rodata/data/bss/brk section (but not the kernel text!)
 	 * should also be not-executable.
 	 */
-	set_memory_nx(rodata_start, (all_end - rodata_start) >> PAGE_SHIFT);
+	all_end = roundup((unsigned long)_brk_end, PMD_SIZE);
+	set_memory_nx(text_end, (all_end - text_end) >> PAGE_SHIFT);
 
 	rodata_test();
 
