@@ -138,6 +138,9 @@ struct data_filter  gyro_fir;
 #define RAW_TO_1G	16384
 #define MPU_ACC_CAL_DELAY 100	/* ms */
 #define POLL_MS_100HZ 10
+#define SNS_TYPE_GYRO 0
+#define SNS_TYPE_ACCEL 1
+
 enum mpu6050_place {
 	MPU6050_PLACE_PU = 0,
 	MPU6050_PLACE_PR = 1,

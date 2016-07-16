@@ -37,6 +37,8 @@
 #define MSM8X16_TOMBAK_LPASS_DIGCODEC_CBCR			0x0181C0B0
 #define MSM8X16_TOMBAK_LPASS_DIGCODEC_AHB_CBCR			0x0181C0B4
 
+// Prema Chand Alugu (premaca@gmail.com) Define this here
+#define WT_88047_L_AUDIO_PA_GPIO
 #ifdef WT_88047_L_AUDIO_PA_GPIO
 #define EXT_SPK_AMP_GPIO	(902+117)
 
@@ -225,6 +227,7 @@ struct msm8916_asoc_mach_data {
 	int codec_type;
 	int ext_pa;
 	int us_euro_gpio;
+	int ext_spk_amp_gpio;
 	int spk_ext_pa_gpio;
 	int mclk_freq;
 	int lb_mode;
@@ -296,6 +299,7 @@ struct msm8x16_wcd_priv {
 	bool clock_active;
 	bool config_mode_active;
 	u16 boost_option;
+	u16 ext_spk_mode;
 	bool spk_boost_set;
 	bool ear_pa_boost_set;
 	bool ext_spk_boost_set;
@@ -321,11 +325,6 @@ extern int msm8x16_wcd_hs_detect(struct snd_soc_codec *codec,
 
 extern void msm8x16_wcd_hs_detect_exit(struct snd_soc_codec *codec);
 
-extern int msm8x16_register_notifier(struct snd_soc_codec *codec,
-				     struct notifier_block *nblock);
-
-extern int msm8x16_unregister_notifier(struct snd_soc_codec *codec,
-					 struct notifier_block *nblock);
 extern int msm8x16_wcd_restart_mbhc(struct snd_soc_codec *codec);
 extern void msm8x16_wcd_spk_ext_pa_cb(
 		int (*codec_spk_ext_pa)(struct snd_soc_codec *codec,

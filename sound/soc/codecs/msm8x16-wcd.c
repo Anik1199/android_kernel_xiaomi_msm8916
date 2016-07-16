@@ -33,8 +33,8 @@
 #include <linux/timer.h>
 #include <linux/workqueue.h>
 #include <linux/sched.h>
-#include <sound/q6afe-v2.h>
 #include <linux/switch.h>
+#include <sound/q6afe-v2.h>
 #include <sound/pcm.h>
 #include <sound/pcm_params.h>
 #include <sound/soc.h>
@@ -5959,7 +5959,7 @@ int msm8x16_wcd_restart_mbhc(struct snd_soc_codec *codec)
 	wcd_mbhc_stop(&msm8x16_wcd_priv->mbhc);
 	wcd_mbhc_deinit(&msm8x16_wcd_priv->mbhc);
 	ret = wcd_mbhc_init(&msm8x16_wcd_priv->mbhc, codec, &mbhc_cb, &intr_ids,
-			true);
+			wcd_mbhc_registers, true);
 	if (ret)
 		dev_err(codec->dev, "%s: mbhc initialization failed\n",
 				__func__);

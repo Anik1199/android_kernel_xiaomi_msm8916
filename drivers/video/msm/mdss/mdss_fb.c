@@ -1268,7 +1268,8 @@ void mdss_fb_set_backlight(struct msm_fb_data_type *mfd, u32 bkl_lvl)
 			pr_debug("backlight sent to panel :%d\n", temp);
 			pdata->set_backlight(pdata, temp);
 			mfd->bl_level = bkl_lvl;
-			mfd->bl_level_old = temp;
+			mfd->bl_level_scaled = temp;
+			bl_notify_needed = true;
 		}
 
 		if (ad_bl_notify_needed)
@@ -1601,7 +1602,6 @@ static int mdss_fb_blank_sub(int blank_mode, struct fb_info *info,
 			mfd->op_enable = true;
 			complete(&mfd->power_off_comp);
 		}
->>>>>>> 6005ccb... drivers: video: Import Xiaomi HM3 kernel code
 		break;
 	}
 
