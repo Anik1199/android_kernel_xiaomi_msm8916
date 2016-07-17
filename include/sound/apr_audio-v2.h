@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 2 and
@@ -30,8 +30,6 @@
 #define ADM_MATRIX_ID_AUDIO_TX              1
 
 #define ADM_MATRIX_ID_COMPRESSED_AUDIO_RX   2
-
-#define ADM_MATRIX_ID_LISTEN_TX		    4
 /* Enumeration for an audio Tx matrix ID.*/
 #define ADM_MATRIX_ID_AUDIOX              1
 
@@ -86,7 +84,6 @@ struct adm_cmd_matrix_map_routings_v5 {
 *	COPP ID.
 */
 #define ADM_CMD_DEVICE_OPEN_V5                          0x00010326
-#define ADM_CMD_DEVICE_OPEN_V6                          0x00010356
 
 /* Definition for a low latency stream session. */
 #define ADM_LOW_LATENCY_DEVICE_SESSION			0x2000
@@ -240,43 +237,6 @@ struct adm_cmd_device_open_v5 {
  */
 } __packed;
 
-/*  ADM device open command payload of the
- *  #ADM_CMD_DEVICE_OPEN_V6 command.
- */
-struct adm_cmd_device_open_v6 {
-	struct adm_cmd_device_open_v5 open;
-
-	u16                  ref_end_num_channel;
-/* Number of channels in the data expected at the reference end point
- * for the voice processing Tx block.
- * Supported values: 1, 2.
- * Not applicable and ignored for audio COPP, compressed usecase.
- */
-
-	u16                  ref_end_bit_width;
-/* bit width(in bits) in the data expected at the reference end point
- * for the voice processing Tx block.
- * Supported values: 16bits.
- * Not applicable and ignored for audio COPP, compressed usecase.
- */
-
-	u32                  ref_end_sample_rate;
-/* Sampling rate of the data expected at the reference end point
- * for the voice processing Tx block.
- * Supported values for voice processor Tx: 8000, 16000, 48000 Hz
- * Not applicable and ignored for audio COPP, compressed usecase.
- */
-
-	u8                   ref_end_channel_mapping[8];
-/* Array of channel mapping of buffers that the audio COPP that is expected
- * at the reference end point for the voice processing Tx block.
- * Channel[i] mapping describes channel I inside the buffer,
- * where 0 < i < ref_end_num_channel.
- * Not applicable and ignored for audio COPP, compressed usecase.
- */
-} __packed;
-
-
 /*
  *	This command allows the client to close a COPP and disconnect
  *	the device session.
@@ -377,7 +337,6 @@ struct adm_cmd_set_pp_params_inband_v5 {
 /* Returns the status and COPP ID to an #ADM_CMD_DEVICE_OPEN_V5 command.
  */
 #define ADM_CMDRSP_DEVICE_OPEN_V5                      0x00010329
-#define ADM_CMDRSP_DEVICE_OPEN_V6                      0x00010357
 
 /*  Payload of the #ADM_CMDRSP_DEVICE_OPEN_V5 message,
  *	which returns the
@@ -2508,11 +2467,8 @@ struct afe_port_cmdrsp_get_param_v2 {
 #define VPM_TX_DM_FLUENCE_COPP_TOPOLOGY			0x00010F72
 #define VPM_TX_QMIC_FLUENCE_COPP_TOPOLOGY		0x00010F75
 #define VPM_TX_DM_RFECNS_COPP_TOPOLOGY			0x00010F86
-#define VPM_TX_LEC_STEREO_REF				0x00010F8C
-#define VPM_TX_LEC_MONO_REF				0x00010F8D
 #define ADM_CMD_COPP_OPEN_TOPOLOGY_ID_DTS_HPX_0		0x00010347
 #define ADM_CMD_COPP_OPEN_TOPOLOGY_ID_DTS_HPX_1		0x00010348
-#define ADM_CMD_COPP_OPEN_TOPOLOGY_ID_AUDIOSPHERE	0x10015003
 
 /* Memory map regions command payload used by the
  * #ASM_CMD_SHARED_MEM_MAP_REGIONS ,#ADM_CMD_SHARED_MEM_MAP_REGIONS
@@ -2688,38 +2644,6 @@ struct asm_flac_cfg {
 	u16 ch_cfg;
 	u16 sample_size;
 	u16 md5_sum;
-};
-
-struct asm_alac_cfg {
-	u32 frame_length;
-	u8 compatible_version;
-	u8 bit_depth;
-	u8 pb;
-	u8 mb;
-	u8 kb;
-	u8 num_channels;
-	u16 max_run;
-	u32 max_frame_bytes;
-	u32 avg_bit_rate;
-	u32 sample_rate;
-	u32 channel_layout_tag;
-};
-
-struct asm_vorbis_cfg {
-	u32 bit_stream_fmt;
-};
-
-struct asm_ape_cfg {
-	u16 compatible_version;
-	u16 compression_level;
-	u32 format_flags;
-	u32 blocks_per_frame;
-	u32 final_frame_blocks;
-	u32 total_frames;
-	u16 bits_per_sample;
-	u16 num_channels;
-	u32 sample_rate;
-	u32 seek_table_present;
 };
 
 struct asm_softpause_params {
@@ -3065,21 +2989,6 @@ struct asm_aac_enc_cfg_v2 {
 
 } __packed;
 
-struct asm_vorbis_fmt_blk_v2 {
-	struct apr_hdr hdr;
-	struct asm_data_cmd_media_fmt_update_v2 fmtblk;
-	u32          bit_stream_fmt;
-/* Bit stream format.
- * Supported values:
- * - 0 -- Raw bitstream
- * - 1 -- Transcoded bitstream
- *
- * Transcoded bitstream containing the size of the frame as the first
- * word in each frame.
- */
-
-} __packed;
-
 struct asm_flac_fmt_blk_v2 {
 	struct apr_hdr hdr;
 	struct asm_data_cmd_media_fmt_update_v2 fmtblk;
@@ -3144,42 +3053,6 @@ struct asm_flac_fmt_blk_v2 {
 	u16 reserved;
 /* Clients must set this field to zero
  */
-
-} __packed;
-
-struct asm_alac_fmt_blk_v2 {
-	struct apr_hdr hdr;
-	struct asm_data_cmd_media_fmt_update_v2 fmtblk;
-
-	u32 frame_length;
-	u8 compatible_version;
-	u8 bit_depth;
-	u8 pb;
-	u8 mb;
-	u8 kb;
-	u8 num_channels;
-	u16 max_run;
-	u32 max_frame_bytes;
-	u32 avg_bit_rate;
-	u32 sample_rate;
-	u32 channel_layout_tag;
-
-} __packed;
-
-struct asm_ape_fmt_blk_v2 {
-	struct apr_hdr hdr;
-	struct asm_data_cmd_media_fmt_update_v2 fmtblk;
-
-	u16 compatible_version;
-	u16 compression_level;
-	u32 format_flags;
-	u32 blocks_per_frame;
-	u32 final_frame_blocks;
-	u32 total_frames;
-	u16 bits_per_sample;
-	u16 num_channels;
-	u32 sample_rate;
-	u32 seek_table_present;
 
 } __packed;
 
@@ -3583,14 +3456,11 @@ struct asm_amrwbplus_fmt_blk_v2 {
 
 } __packed;
 
-#define ASM_MEDIA_FMT_AC3_DEC                0x00010BF6
-#define ASM_MEDIA_FMT_EAC3_DEC               0x00010C3C
+#define ASM_MEDIA_FMT_AC3_DEC                   0x00010BF6
+#define ASM_MEDIA_FMT_EAC3_DEC                   0x00010C3C
 #define ASM_MEDIA_FMT_DTS                    0x00010D88
 #define ASM_MEDIA_FMT_MP2                    0x00010DE9
 #define ASM_MEDIA_FMT_FLAC                   0x00010C16
-#define ASM_MEDIA_FMT_ALAC                   0x00012F31
-#define ASM_MEDIA_FMT_VORBIS                 0x00010C15
-#define ASM_MEDIA_FMT_APE                    0x00012F32
 
 
 /* Media format ID for adaptive transform acoustic coding. This
@@ -4337,8 +4207,6 @@ struct asm_stream_cmd_open_write_v3 {
  * - #ASM_MEDIA_FMT_FR_FS
  * - #ASM_MEDIA_FMT_VORBIS
  * - #ASM_MEDIA_FMT_FLAC
- * - #ASM_MEDIA_FMT_ALAC
- * - #ASM_MEDIA_FMT_APE
  * - #ASM_MEDIA_FMT_EXAMPLE
  */
 } __packed;
@@ -6792,21 +6660,6 @@ struct asm_eq_params {
 */
 #define AUDPROC_PARAM_ID_BASS_BOOST_STRENGTH                     0x000108A4
 
-/** ID of the PBE module.
-    This module supports the following parameter IDs:
-    - #AUDPROC_PARAM_ID_PBE_ENABLE
-    - #AUDPROC_PARAM_ID_PBE_PARAM_CONFIG
-*/
-#define AUDPROC_MODULE_ID_PBE                                    0x00010C2A
-/** ID of the Bass Boost enable parameter used by
-    AUDPROC_MODULE_ID_BASS_BOOST.
-*/
-#define AUDPROC_PARAM_ID_PBE_ENABLE                              0x00010C2B
-/** ID of the Bass Boost mode parameter used by
-    AUDPROC_MODULE_ID_BASS_BOOST.
-*/
-#define AUDPROC_PARAM_ID_PBE_PARAM_CONFIG                        0x00010C49
-
 /** ID of the Virtualizer module. This module supports the
     following parameter IDs:
     - #AUDPROC_PARAM_ID_VIRTUALIZER_ENABLE
@@ -7247,15 +7100,12 @@ struct asm_dts_eagle_param_get {
 #define LSM_SESSION_CMD_OPEN_TX				(0x00012A82)
 #define LSM_SESSION_CMD_CLOSE_TX			(0x00012A88)
 #define LSM_SESSION_CMD_SET_PARAMS			(0x00012A83)
-#define LSM_SESSION_CMD_SET_PARAMS_V2			(0x00012A8F)
 #define LSM_SESSION_CMD_REGISTER_SOUND_MODEL		(0x00012A84)
 #define LSM_SESSION_CMD_DEREGISTER_SOUND_MODEL		(0x00012A85)
 #define LSM_SESSION_CMD_START				(0x00012A86)
 #define LSM_SESSION_CMD_STOP				(0x00012A87)
 #define LSM_SESSION_CMD_EOB				(0x00012A89)
 #define LSM_SESSION_CMD_READ				(0x00012A8A)
-#define LSM_SESSION_CMD_OPEN_TX_V2			(0x00012A8B)
-#define LSM_CMD_ADD_TOPOLOGIES				(0x00012A8C)
 
 #define LSM_SESSION_EVENT_DETECTION_STATUS		(0x00012B00)
 #define LSM_SESSION_EVENT_DETECTION_STATUS_V2		(0x00012B01)
@@ -7274,11 +7124,6 @@ struct asm_dts_eagle_param_get {
 #define LSM_MODULE_ID_LAB				(0x00012C08)
 #define LSM_PARAM_ID_LAB_ENABLE				(0x00012C09)
 #define LSM_PARAM_ID_LAB_CONFIG				(0x00012C0A)
-#define LSM_MODULE_ID_FRAMEWORK				(0x00012C0E)
-#define LSM_PARAM_ID_SWMAD_CFG				(0x00012C18)
-#define LSM_PARAM_ID_SWMAD_MODEL			(0x00012C19)
-#define LSM_PARAM_ID_SWMAD_ENABLE			(0x00012C1A)
-#define LSM_PARAM_ID_POLLING_ENABLE			(0x00012C1B)
 
 /* HW MAD specific */
 #define AFE_MODULE_HW_MAD				(0x00010230)
@@ -7297,7 +7142,6 @@ struct asm_dts_eagle_param_get {
 #define AFE_PARAM_ID_CDC_SLIMBUS_SLAVE_CFG		(0x00010235)
 #define AFE_PARAM_ID_CDC_REG_CFG			(0x00010236)
 #define AFE_PARAM_ID_CDC_REG_CFG_INIT			(0x00010237)
-#define AFE_PARAM_ID_CDC_REG_PAGE_CFG                   (0x00010296)
 
 #define AFE_MAX_CDC_REGISTERS_TO_CONFIG			(20)
 
@@ -7406,11 +7250,9 @@ struct afe_param_id_clip_bank_sel {
 /* Operation needs more data or resources. */
 #define ADSP_ENEEDMORE    0x00000012
 /* Operation does not have memory. */
-#define ADSP_ENOMEMORY    0x00000014
+#define ADSP_ENOMEMORY     0x00000014
 /* Item does not exist. */
-#define ADSP_ENOTEXIST    0x00000015
-/* Max count for adsp error code sent to HLOS*/
-#define ADSP_ERR_MAX      (ADSP_ENOTEXIST + 1)
+#define ADSP_ENOTEXIST      0x00000015
 /* Operation is finished. */
 #define ADSP_ETERMINATED    0x00011174
 
@@ -7420,7 +7262,6 @@ struct afe_param_id_clip_bank_sel {
 
 /* Supported OSR clock values */
 #define Q6AFE_LPASS_OSR_CLK_12_P288_MHZ		0xBB8000
-#define Q6AFE_LPASS_OSR_CLK_9_P600_MHZ		0x927C00
 #define Q6AFE_LPASS_OSR_CLK_8_P192_MHZ		0x7D0000
 #define Q6AFE_LPASS_OSR_CLK_6_P144_MHZ		0x5DC000
 #define Q6AFE_LPASS_OSR_CLK_4_P096_MHZ		0x3E8000
@@ -7604,7 +7445,6 @@ enum afe_config_type {
 	AFE_AANC_VERSION,
 	AFE_CDC_CLIP_REGISTERS_CONFIG,
 	AFE_CLIP_BANK_SEL,
-	AFE_CDC_REGISTER_PAGE_CONFIG,
 	AFE_MAX_CONFIG_TYPES,
 };
 
@@ -7634,21 +7474,6 @@ struct afe_param_cdc_reg_cfg {
 	uint32_t reg_field_bit_mask;
 	uint16_t reg_bit_width;
 	uint16_t reg_offset_scale;
-} __packed;
-
-#define AFE_API_VERSION_CDC_REG_PAGE_CFG   1
-
-enum {
-	AFE_CDC_REG_PAGE_ASSIGN_PROC_ID_0 = 0,
-	AFE_CDC_REG_PAGE_ASSIGN_PROC_ID_1,
-	AFE_CDC_REG_PAGE_ASSIGN_PROC_ID_2,
-	AFE_CDC_REG_PAGE_ASSIGN_PROC_ID_3,
-};
-
-struct afe_param_cdc_reg_page_cfg {
-	uint32_t minor_version;
-	uint32_t enable;
-	uint32_t proc_id;
 } __packed;
 
 struct afe_param_cdc_reg_cfg_data {
@@ -7911,7 +7736,6 @@ enum {
 	LEGACY_PCM = 0,
 	COMPRESSED_PASSTHROUGH,
 	COMPRESSED_PASSTHROUGH_CONVERT,
-	LISTEN,
 };
 
 #define AUDPROC_MODULE_ID_COMPRESSED_MUTE                0x00010770
@@ -7931,56 +7755,4 @@ struct adm_set_compressed_device_latency {
 	struct adm_param_data_v5 params;
 	u32    latency;
 } __packed;
-
-#define VOICEPROC_MODULE_ID_GENERIC_TX                      0x00010EF6
-#define VOICEPROC_PARAM_ID_FLUENCE_SOUNDFOCUS               0x00010E37
-#define VOICEPROC_PARAM_ID_FLUENCE_SOURCETRACKING           0x00010E38
-#define MAX_SECTORS                                         8
-#define MAX_NOISE_SOURCE_INDICATORS                         3
-#define MAX_POLAR_ACTIVITY_INDICATORS                       360
-
-struct sound_focus_param {
-	uint16_t start_angle[MAX_SECTORS];
-	uint8_t enable[MAX_SECTORS];
-	uint16_t gain_step;
-} __packed;
-
-struct source_tracking_param {
-	uint8_t vad[MAX_SECTORS];
-	uint16_t doa_speech;
-	uint16_t doa_noise[MAX_NOISE_SOURCE_INDICATORS];
-	uint8_t polar_activity[MAX_POLAR_ACTIVITY_INDICATORS];
-} __packed;
-
-struct adm_param_fluence_soundfocus_t {
-	uint16_t start_angles[MAX_SECTORS];
-	uint8_t enables[MAX_SECTORS];
-	uint16_t gain_step;
-	uint16_t reserved;
-} __packed;
-
-struct adm_set_fluence_soundfocus_param {
-	struct adm_cmd_set_pp_params_v5 params;
-	struct adm_param_data_v5 data;
-	struct adm_param_fluence_soundfocus_t soundfocus_data;
-} __packed;
-
-struct adm_param_fluence_sourcetracking_t {
-	uint8_t vad[MAX_SECTORS];
-	uint16_t doa_speech;
-	uint16_t doa_noise[MAX_NOISE_SOURCE_INDICATORS];
-	uint8_t polar_activity[MAX_POLAR_ACTIVITY_INDICATORS];
-} __packed;
-
-#define AUDPROC_MODULE_ID_AUDIOSPHERE               0x00010916
-#define AUDPROC_PARAM_ID_AUDIOSPHERE_ENABLE         0x00010917
-#define AUDPROC_PARAM_ID_AUDIOSPHERE_STRENGTH       0x00010918
-#define AUDPROC_PARAM_ID_AUDIOSPHERE_CONFIG_MODE    0x00010919
-
-#define AUDPROC_PARAM_ID_AUDIOSPHERE_COEFFS_STEREO_INPUT         0x0001091A
-#define AUDPROC_PARAM_ID_AUDIOSPHERE_COEFFS_MULTICHANNEL_INPUT   0x0001091B
-#define AUDPROC_PARAM_ID_AUDIOSPHERE_DESIGN_STEREO_INPUT         0x0001091C
-#define AUDPROC_PARAM_ID_AUDIOSPHERE_DESIGN_MULTICHANNEL_INPUT   0x0001091D
-
-#define AUDPROC_PARAM_ID_AUDIOSPHERE_OPERATING_INPUT_MEDIA_INFO  0x0001091E
 #endif /*_APR_AUDIO_V2_H_ */

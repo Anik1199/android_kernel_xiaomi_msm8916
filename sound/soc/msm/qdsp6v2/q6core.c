@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -19,7 +19,6 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/qdsp6v2/apr.h>
-#include <linux/ratelimit.h>
 #include <soc/qcom/smd.h>
 #include <soc/qcom/ocmem.h>
 #include <sound/q6core.h>
@@ -179,17 +178,12 @@ static int32_t aprv2_core_fn_q(struct apr_client_data *data, void *priv)
 
 void ocm_core_open(void)
 {
-	static DEFINE_RATELIMIT_STATE(rl, HZ/2, 1);
-
 	if (q6core_lcl.core_handle_q == NULL)
 		q6core_lcl.core_handle_q = apr_register("ADSP", "CORE",
 					aprv2_core_fn_q, 0xFFFFFFFF, NULL);
 	pr_debug("%s: Open_q %p\n", __func__, q6core_lcl.core_handle_q);
-	if (q6core_lcl.core_handle_q == NULL) {
-			if (__ratelimit(&rl))
-				pr_err("%s: Unable to register CORE\n",
-					__func__);
-	}
+	if (q6core_lcl.core_handle_q == NULL)
+		pr_err("%s: Unable to register CORE\n", __func__);
 }
 
 int32_t core_set_license(uint32_t key, uint32_t module_id)
@@ -453,8 +447,6 @@ uint32_t core_set_dolby_manufacturer_id(int manufacturer_id)
 {
 	struct adsp_dolby_manufacturer_id payload;
 	int rc = 0;
-	static DEFINE_RATELIMIT_STATE(rl, HZ/2, 1);
-
 	pr_debug("%s: manufacturer_id :%d\n", __func__, manufacturer_id);
 	mutex_lock(&(q6core_lcl.cmd_lock));
 	ocm_core_open();
@@ -473,11 +465,9 @@ uint32_t core_set_dolby_manufacturer_id(int manufacturer_id)
 			payload.hdr.opcode, payload.manufacturer_id);
 		rc = apr_send_pkt(q6core_lcl.core_handle_q,
 						(uint32_t *)&payload);
-		if (rc < 0) {
-			if (__ratelimit(&rl))
-				pr_err("%s: SET_DOLBY_MANUFACTURER_ID failed op[0x%x]rc[%d]\n",
-					__func__, payload.hdr.opcode, rc);
-		}
+		if (rc < 0)
+			pr_err("%s: SET_DOLBY_MANUFACTURER_ID failed op[0x%x]rc[%d]\n",
+				__func__, payload.hdr.opcode, rc);
 	}
 	mutex_unlock(&(q6core_lcl.cmd_lock));
 	return rc;
