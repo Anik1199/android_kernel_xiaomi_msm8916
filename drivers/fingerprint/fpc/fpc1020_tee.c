@@ -418,16 +418,16 @@ static ssize_t compatible_all_set(struct device *dev,
 
 	printk("heming add : compatible_all_set = %s\n", buf);
 	if (!strncmp(buf, "enable", strlen("enable"))) {
-		rc = fpc1020_request_named_gpio(fpc1020, "fpc, gpio_irq",
+		rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_irq",
 				&fpc1020->irq_gpio);
 		if (rc)
 			goto exit;
-		rc = fpc1020_request_named_gpio(fpc1020, "fpc, gpio_rst",
+		rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_rst",
 				&fpc1020->rst_gpio);
 		if (rc)
 			goto exit;
 		irqf = IRQF_TRIGGER_RISING | IRQF_ONESHOT;
-		if (of_property_read_bool(dev->of_node, "fpc, enable-wakeup")) {
+		if (of_property_read_bool(dev->of_node, "fpc,enable-wakeup")) {
 			irqf |= IRQF_NO_SUSPEND;
 			device_init_wakeup(dev, 1);
 			fpc1020->wakeup_enabled = 1;
@@ -577,10 +577,10 @@ static int fpc1020_probe(struct  platform_device *pdev)
 
 
 
-	rc = of_property_read_u32(np, "fpc, event-type", &val);
+	rc = of_property_read_u32(np, "fpc,event-type", &val);
 	fpc1020->event_type = rc < 0 ? EV_MSC : val;
 
-	rc = of_property_read_u32(np, "fpc, event-code", &val);
+	rc = of_property_read_u32(np, "fpc,event-code", &val);
 	fpc1020->event_code = rc < 0 ? MSC_SCAN : val;
 
 	fpc1020->idev = devm_input_allocate_device(dev);
@@ -614,7 +614,7 @@ static int fpc1020_probe(struct  platform_device *pdev)
 		goto exit;
 	}
 
-	if (of_property_read_bool(dev->of_node, "fpc, enable-on-boot")) {
+	if (of_property_read_bool(dev->of_node, "fpc,enable-on-boot")) {
 		dev_info(dev, "Enabling hardware\n");
 		(void)device_prepare(fpc1020, false);
 	}
@@ -625,7 +625,7 @@ exit:
 }
 
 static struct of_device_id fpc1020_of_match[] = {
-	{.compatible = "fpc, fpc1020",},
+	{.compatible = "fpc,fpc1020",},
 	{}
 };
 MODULE_DEVICE_TABLE(of, fpc1020_of_match);

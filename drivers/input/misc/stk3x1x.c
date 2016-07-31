@@ -3639,7 +3639,7 @@ static int stk3x1x_parse_dt(struct device *dev,
 		return rc;
 	}
 
-	rc = of_property_read_u32(np, "stk, ps-thd-h", &temp_val);
+	rc = of_property_read_u32(np, "stk,ps-thd-h", &temp_val);
 	if (!rc)
 		pdata->ps_thd_h = (u16)temp_val;
 	else {
@@ -3647,7 +3647,7 @@ static int stk3x1x_parse_dt(struct device *dev,
 		return rc;
 	}
 
-	rc = of_property_read_u32(np, "stk, ps-thd-l", &temp_val);
+	rc = of_property_read_u32(np, "stk,ps-thd-l", &temp_val);
 	if (!rc)
 		pdata->ps_thd_l = (u16)temp_val;
 	else {

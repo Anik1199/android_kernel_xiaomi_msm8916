@@ -4489,7 +4489,7 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 	chip->shdn_after_pwroff = of_property_read_bool(node,
 						"qcom,shdn-after-pwroff");
 
-	if (of_find_property(node, "qcom, thermal-mitigation",
+	if (of_find_property(node, "qcom,thermal-mitigation",
 					&chip->thermal_levels)) {
 		chip->thermal_mitigation = devm_kzalloc(chip->dev,
 					chip->thermal_levels,
