@@ -1482,18 +1482,18 @@ static int ist30xx_parse_dt(struct device *dev,
 	struct device_node *np = dev->of_node;
 
 	pdata->name = "ist30xx";
-	rc = of_property_read_string(np, "ist30xx, name", &pdata->name);
+	rc = of_property_read_string(np, "ist30xx,name", &pdata->name);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read name\n");
 		return rc;
 	}
 
-	pdata->reset_gpio = of_get_named_gpio_flags(np, "ist30xx, reset-gpio",
+	pdata->reset_gpio = of_get_named_gpio_flags(np, "ist30xx,reset-gpio",
 						0, &pdata->reset_gpio_flags);
 	if (pdata->reset_gpio < 0)
 		return pdata->reset_gpio;
 
-	pdata->irq_gpio = of_get_named_gpio_flags(np, "ist30xx, irq-gpio",
+	pdata->irq_gpio = of_get_named_gpio_flags(np, "ist30xx,irq-gpio",
 					  0, &pdata->irq_gpio_flags);
 	if (pdata->irq_gpio < 0)
 		return pdata->irq_gpio;
@@ -1963,7 +1963,7 @@ MODULE_DEVICE_TABLE(i2c, ist30xx_idtable);
 
 #ifdef CONFIG_OF
 static struct of_device_id ist30xx_match_table[] = {
-	{.compatible = "imagis, ist30xx-ts",},
+	{.compatible = "imagis,ist30xx-ts",},
 	{},
 };
 #else

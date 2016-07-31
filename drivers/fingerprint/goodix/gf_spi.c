@@ -53,7 +53,7 @@
 #include <linux/platform_device.h>
 #endif
 
-#define GF_SPIDEV_NAME	 "goodix, fingerprint"
+#define GF_SPIDEV_NAME	 "goodix,fingerprint"
 /*device name after register in charater*/
 #define GF_DEV_NAME			"goodix_fp"
 #define	GF_INPUT_NAME		"gf3208"	/*"goodix_fp" */
@@ -489,7 +489,7 @@ static int driver_init_partial(struct gf_dev *gf_dev)
 	gf_dev->device_available = 1;
 
 	/*get reset resource*/
-	gf_dev->reset_gpio = of_get_named_gpio(gf_dev->spi->dev.of_node, "goodix, gpio_reset", 0);
+	gf_dev->reset_gpio = of_get_named_gpio(gf_dev->spi->dev.of_node, "goodix,gpio_reset", 0);
 	if (!gpio_is_valid(gf_dev->reset_gpio)) {
 		pr_info("RESET GPIO is invalid.\n");
 		ret = -EIO;
@@ -504,7 +504,7 @@ static int driver_init_partial(struct gf_dev *gf_dev)
 	gpio_direction_output(gf_dev->reset_gpio, 1);
 
 	/*get irq resourece*/
-	gf_dev->irq_gpio = of_get_named_gpio(gf_dev->spi->dev.of_node, "goodix, gpio_irq", 0);
+	gf_dev->irq_gpio = of_get_named_gpio(gf_dev->spi->dev.of_node, "goodix,gpio_irq", 0);
 	pr_info("gf:irq_gpio:%d\n", gf_dev->irq_gpio);
 	if (!gpio_is_valid(gf_dev->irq_gpio)) {
 		pr_info("IRQ GPIO is invalid.\n");
