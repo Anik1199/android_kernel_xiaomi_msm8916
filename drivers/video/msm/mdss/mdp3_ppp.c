@@ -1,4 +1,4 @@
-/* Copyright (c) 2007, 2013-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2007, 2013-2015, The Linux Foundation. All rights reserved.
  * Copyright (C) 2007 Google Incorporated
  *
  * This software is licensed under the terms of the GNU General Public
@@ -45,7 +45,7 @@
 #define CLK_FUDGE_NUM		12
 #define CLK_FUDGE_DEN		10
 
-#define YUV_BW_FUDGE_NUM	10
+#define YUV_BW_FUDGE_NUM	20
 #define YUV_BW_FUDGE_DEN	10
 
 struct ppp_resource ppp_res;
@@ -446,19 +446,6 @@ bool mdp3_is_scale(struct mdp_blit_req *req)
 	return false;
 }
 
-static u64 mdp3_clk_round_off(u64 clk_rate)
-{
-	u64 clk_round_off;
-
-	if (clk_rate < MDP_CORE_CLK_RATE_SVS)
-		clk_round_off = MDP_CORE_CLK_RATE_SVS;
-	else if (clk_rate < MDP_CORE_CLK_RATE_SUPER_SVS)
-		clk_round_off = MDP_CORE_CLK_RATE_SUPER_SVS;
-	else
-		clk_round_off = MDP_CORE_CLK_RATE_MAX;
-	return clk_round_off;
-}
-
 u32 mdp3_clk_calc(struct msm_fb_data_type *mfd,
 				struct blit_req_list *lreq, u32 fps)
 {
@@ -492,8 +479,8 @@ u32 mdp3_clk_calc(struct msm_fb_data_type *mfd,
 							req->dst_rect.h;
 			}
 			scale = max(scale_x, scale_y);
+			scale = scale >= 100 ? scale : 100;
 		}
-		scale = scale >= 100 ? scale : 100;
 		if (mdp3_is_blend(req))
 			scale = max(scale, blend_l);
 
@@ -506,7 +493,13 @@ u32 mdp3_clk_calc(struct msm_fb_data_type *mfd,
 	mdp_clk_rate += (ppp_res.solid_fill_pixel * fps);
 	mdp_clk_rate = fudge_factor(mdp_clk_rate, CLK_FUDGE_NUM, CLK_FUDGE_DEN);
 	pr_debug("mdp_clk_rate for ppp = %llu\n", mdp_clk_rate);
-	mdp_clk_rate = mdp3_clk_round_off(mdp_clk_rate);
+
+	if (mdp_clk_rate < MDP_CORE_CLK_RATE_SVS)
+		mdp_clk_rate = MDP_CORE_CLK_RATE_SVS;
+	else if (mdp_clk_rate < MDP_CORE_CLK_RATE_SUPER_SVS)
+		mdp_clk_rate = MDP_CORE_CLK_RATE_SUPER_SVS;
+	else
+		mdp_clk_rate = MDP_CORE_CLK_RATE_MAX;
 
 	return mdp_clk_rate;
 }
@@ -539,8 +532,6 @@ int mdp3_calc_ppp_res(struct msm_fb_data_type *mfd,  struct blit_req_list *lreq)
 	int i, lcount = 0;
 	struct mdp_blit_req *req;
 	struct bpp_info bpp;
-	u64 old_solid_fill_pixel = 0;
-	u64 new_solid_fill_pixel = 0;
 	u64 src_read_bw = 0;
 	u32 bg_read_bw = 0;
 	u32 dst_write_bw = 0;
@@ -559,18 +550,11 @@ int mdp3_calc_ppp_res(struct msm_fb_data_type *mfd,  struct blit_req_list *lreq)
 	if (lreq->req_list[0].flags & MDP_SOLID_FILL) {
 		req = &(lreq->req_list[0]);
 		mdp3_get_bpp_info(req->dst.format, &bpp);
-		old_solid_fill_pixel = ppp_res.solid_fill_pixel;
-		new_solid_fill_pixel = req->dst_rect.w * req->dst_rect.h;
-		ppp_res.solid_fill_pixel += new_solid_fill_pixel;
-		ppp_res.solid_fill_byte += req->dst_rect.w * req->dst_rect.h *
+		ppp_res.solid_fill_pixel = req->dst_rect.w * req->dst_rect.h;
+		ppp_res.solid_fill_byte = req->dst_rect.w * req->dst_rect.h *
 						bpp.bpp_num / bpp.bpp_den;
-		if ((old_solid_fill_pixel >= new_solid_fill_pixel) ||
-			(mdp3_res->solid_fill_vote_en)) {
-			pr_debug("Last fill pixels are higher or fill_en %d\n",
-				mdp3_res->solid_fill_vote_en);
-			ATRACE_END(__func__);
-			return 0;
-		}
+		ATRACE_END(__func__);
+		return 0;
 	}
 
 	for (i = 0; i < lcount; i++) {
@@ -607,8 +591,8 @@ int mdp3_calc_ppp_res(struct msm_fb_data_type *mfd,  struct blit_req_list *lreq)
 			src_read_bw = mdp3_adjust_scale_factor(req,
 						src_read_bw, bpp.bpp_pln);
 			if (!(check_if_rgb(req->src.format))) {
-				src_read_bw = fudge_factor(src_read_bw,
-						YUV_BW_FUDGE_NUM,
+				src_read_bw = src_read_bw * YUV_BW_FUDGE_NUM;
+				src_read_bw = do_div(src_read_bw,
 						YUV_BW_FUDGE_DEN);
 			}
 			mdp3_get_bpp_info(req->dst.format, &bpp);
@@ -639,22 +623,15 @@ int mdp3_calc_ppp_res(struct msm_fb_data_type *mfd,  struct blit_req_list *lreq)
 	if (fps == 0)
 		fps = panel_info->mipi.frame_rate;
 
-	if (lreq->req_list[0].flags & MDP_SOLID_FILL) {
-		honest_ppp_ab = ppp_res.solid_fill_byte * 4;
-		pr_debug("solid fill honest_ppp_ab %llu\n", honest_ppp_ab);
-	} else {
 	honest_ppp_ab += ppp_res.solid_fill_byte;
-	mdp3_res->solid_fill_vote_en = true;
-        }
-
 	honest_ppp_ab = honest_ppp_ab * fps;
+
 	if (honest_ppp_ab != ppp_res.next_ab) {
 		ppp_res.next_ab = honest_ppp_ab;
 		ppp_res.next_ib = honest_ppp_ab;
 		ppp_stat->bw_update = true;
-		pr_debug("solid fill ab = %llx, total ab = %llx (%d fps) Solid_fill_vote %d\n",
-			(ppp_res.solid_fill_byte * fps), honest_ppp_ab, fps,
-			mdp3_res->solid_fill_vote_en);
+		pr_debug("solid fill ab = %llx, total ab = %llx (%d fps)\n",
+			(ppp_res.solid_fill_byte * fps), honest_ppp_ab, fps);
 		ATRACE_INT("mdp3_ppp_bus_quota", honest_ppp_ab);
 	}
 	ppp_res.clk_rate = mdp3_clk_calc(mfd, lreq, fps);
@@ -1315,7 +1292,6 @@ void mdp3_ppp_req_pop(struct blit_req_queue *req_q)
 
 void mdp3_free_fw_timer_func(unsigned long arg)
 {
-	mdp3_res->solid_fill_vote_en = false;
 	schedule_work(&ppp_stat->free_bw_work);
 }
 

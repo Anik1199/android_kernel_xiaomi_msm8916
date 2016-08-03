@@ -121,18 +121,6 @@ struct mdp_csc_cfg mdp_csc_convert[MDSS_MDP_MAX_CSC] = {
 		{0x0, 0xff, 0x0, 0xff, 0x0, 0xff,},
 		{0x0, 0xff, 0x0, 0xff, 0x0, 0xff,},
 	},
-	[MDSS_MDP_CSC_RGB2RGB] = {
-		0,
-		{
-			0x0200, 0x0000, 0x0000,
-			0x0000, 0x0200, 0x0000,
-			0x0000, 0x0000, 0x0200,
-		},
-		{ 0x0, 0x0, 0x0,},
-		{ 0x0, 0x0, 0x0,},
-		{ 0x0, 0xff, 0x0, 0xff, 0x0, 0xff,},
-		{ 0x0, 0xff, 0x0, 0xff, 0x0, 0xff,},
-	},
 };
 
 /*
@@ -407,8 +395,6 @@ struct mdss_pp_res_type {
 	struct pp_sts_type pp_disp_sts[MDSS_MAX_MIXER_DISP_NUM];
 	/* physical info */
 	struct pp_hist_col_info *dspp_hist;
-	struct mdp_pcc_cfg_data raw_pcc_disp_cfg[MDSS_BLOCK_DISP_NUM];
-	struct mdp_pcc_cfg_data user_pcc_disp_cfg[MDSS_BLOCK_DISP_NUM];
 };
 
 static DEFINE_MUTEX(mdss_pp_mutex);
@@ -1127,8 +1113,8 @@ static int mdss_mdp_scale_setup(struct mdss_mdp_pipe *pipe)
 		}
 	}
 
-	src_w = DECIMATED_DIMENSION(pipe->src.w, pipe->horz_deci);
-	src_h = DECIMATED_DIMENSION(pipe->src.h, pipe->vert_deci);
+	src_w = pipe->src.w >> pipe->horz_deci;
+	src_h = pipe->src.h >> pipe->vert_deci;
 
 	chroma_sample = pipe->src_fmt->chroma_sample;
 	if (pipe->flags & MDP_SOURCE_ROTATED_90) {
@@ -2745,101 +2731,6 @@ static void pp_update_pcc_regs(char __iomem *addr,
 	writel_relaxed(cfg_ptr->b.rgb_1, addr + 8);
 }
 
-static u32 pcc_rescale(u32 raw, u32 user)
-{
-	int val = 0;
-
-	if (raw > 32768)
-		raw = 32768;
-	if (user > 32768)
-		user = 32768;
-	val = 32768 - ((32768 - raw) + (32768 - user));
-	return val < 100 ? 100 : val;
-}
-
-static void pcc_combine(struct mdp_pcc_cfg_data *raw,
-		struct mdp_pcc_cfg_data *user,
-		struct mdp_pcc_cfg_data *real)
-{
-	uint32_t r_ops, u_ops, r_en, u_en;
-
-	if (real == NULL) {
-		real = kzalloc(sizeof(struct mdp_pcc_cfg_data), GFP_KERNEL);
-		if (!real) {
-			pr_err("%s: alloc failed!", __func__);
-			return;
-		}
-	}
-
-	r_ops = raw ? raw->ops : MDP_PP_OPS_DISABLE;
-	u_ops = user ? user->ops : MDP_PP_OPS_DISABLE;
-	r_en = raw && !(raw->ops & MDP_PP_OPS_DISABLE);
-	u_en = user && !(user->ops & MDP_PP_OPS_DISABLE);
-
-	// user configuration may change often, but the raw configuration
-	// will correspond to calibration data which should only change if
-	// there is a mode switch. we only care about the base
-	// coefficients from the user config.
-
-	if (!r_en || (raw->r.r == 0 && raw->g.g == 0 && raw->b.b == 0))
-		raw->r.r = raw->g.g = raw->b.b = 32768;
-	if (!u_en || (user->r.r == 0 && user->g.g == 0 && user->b.b ==0))
-		user->r.r = user->g.g = user->b.b = 32768;
-
-	memcpy(real, raw, sizeof(struct mdp_pcc_cfg_data));
-	real->r.r = pcc_rescale(raw->r.r, user->r.r);
-	real->g.g = pcc_rescale(raw->g.g, user->g.g);
-	real->b.b = pcc_rescale(raw->b.b, user->b.b);
-	if (r_en && u_en)
-		real->ops = r_ops | u_ops;
-	else if (r_en)
-		real->ops = r_ops;
-	else if (u_en)
-		real->ops = u_ops;
-	else
-		real->ops = MDP_PP_OPS_DISABLE;
-
-	pr_debug("%s: raw:\n", __func__);
-	pp_print_pcc_cfg_data(raw, 0);
-	pr_debug("%s: user:\n", __func__);
-	pp_print_pcc_cfg_data(user, 0);
-	pr_debug("%s: real:\n", __func__);
-	pp_print_pcc_cfg_data(real, 0);
-}
-
-int mdss_mdp_user_pcc_config(struct mdp_pcc_cfg_data *config)
-{
-	int ret = 0;
-	u32 disp_num = 0;
-
-	if ((config->block < MDP_LOGICAL_BLOCK_DISP_0) ||
-		(config->block >= MDP_BLOCK_MAX))
-		return -EINVAL;
-
-	if ((config->ops & MDSS_PP_SPLIT_MASK) == MDSS_PP_SPLIT_MASK) {
-		pr_warn("Can't set both split bits\n");
-		return -EINVAL;
-	}
-
-	if (config->ops & MDP_PP_OPS_READ) {
-		pr_warn("Only write is supported for user PCC\n");
-		return -EINVAL;
-	}
-
-	mutex_lock(&mdss_pp_mutex);
-	disp_num = config->block - MDP_LOGICAL_BLOCK_DISP_0;
-
-	mdss_pp_res->user_pcc_disp_cfg[disp_num] = *config;
-	pcc_combine(&mdss_pp_res->raw_pcc_disp_cfg[disp_num],
-				&mdss_pp_res->user_pcc_disp_cfg[disp_num],
-				&mdss_pp_res->pcc_disp_cfg[disp_num]);
-	mdss_pp_res->pp_disp_flags[disp_num] |= PP_FLAGS_DIRTY_PCC;
-
-	mutex_unlock(&mdss_pp_mutex);
-	return ret;
-}
-
-
 int mdss_mdp_pcc_config(struct mdp_pcc_cfg_data *config,
 					u32 *copyback)
 {
@@ -2875,10 +2766,7 @@ int mdss_mdp_pcc_config(struct mdp_pcc_cfg_data *config,
 		*copyback = 1;
 		mdss_mdp_clk_ctrl(MDP_BLOCK_POWER_OFF);
 	} else {
-		mdss_pp_res->raw_pcc_disp_cfg[disp_num] = *config;
-		pcc_combine(&mdss_pp_res->raw_pcc_disp_cfg[disp_num],
-					&mdss_pp_res->user_pcc_disp_cfg[disp_num],
-					&mdss_pp_res->pcc_disp_cfg[disp_num]);
+		mdss_pp_res->pcc_disp_cfg[disp_num] = *config;
 		mdss_pp_res->pp_disp_flags[disp_num] |= PP_FLAGS_DIRTY_PCC;
 	}
 
@@ -4850,7 +4738,6 @@ int mdss_mdp_ad_input(struct msm_fb_data_type *mfd,
 			mdss_fb_set_backlight(mfd, bl);
 			mutex_unlock(&mfd->bl_lock);
 			mutex_lock(&ad->lock);
-			mfd->calib_mode_bl = bl;
 		} else {
 			pr_warn("should be in calib mode\n");
 		}
@@ -5831,9 +5718,6 @@ int mdss_mdp_calib_mode(struct msm_fb_data_type *mfd,
 		return -EINVAL;
 	mutex_lock(&mdss_pp_mutex);
 	mfd->calib_mode = cfg->calib_mask;
-	mutex_lock(&mfd->bl_lock);
-	mfd->calib_mode_bl = mfd->bl_level;
-	mutex_unlock(&mfd->bl_lock);
 	mutex_unlock(&mdss_pp_mutex);
 	return 0;
 }
