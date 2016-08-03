@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -30,7 +30,6 @@
 #define MDP3_REG_PRIMARY_VSYNC_INIT_VAL			0x0328
 #define MDP3_REG_SECONDARY_VSYNC_INIT_VAL		0x032c
 #define MDP3_REG_EXTERNAL_VSYNC_INIT_VAL		0x0330
-#define MDP3_REG_AUTOREFRESH_CONFIG_P			0x034C
 #define MDP3_REG_SYNC_THRESH_0				0x0200
 #define MDP3_REG_SYNC_THRESH_1				0x0204
 #define MDP3_REG_SYNC_THRESH_2				0x0208
@@ -73,7 +72,6 @@
 #define MDP3_DMA_P_WATERMARK_2				0x9009C
 #define MDP3_PANIC_ROBUST_CTRL				0x900A0
 #define MDP3_PANIC_LUT0					0x900A4
-#define MDP3_PANIC_LUT1					0x900A8
 #define MDP3_ROBUST_LUT					0x900AC
 
 /*danger safe*/
@@ -355,7 +353,5 @@ enum {
 #define MDP3_DMA_P_HIST_INTR_RESET_DONE_BIT		BIT(0)
 #define MDP3_DMA_P_HIST_INTR_HIST_DONE_BIT		BIT(1)
 #define MDP3_PPP_DONE MDP3_INTR_DP0_ROI_DONE
-
-#define MDP3_DMA_P_BUSY_BIT				BIT(6)
 
 #endif /* MDP3_HWIO_H */

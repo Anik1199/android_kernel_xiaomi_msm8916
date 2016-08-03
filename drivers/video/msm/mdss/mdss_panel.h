@@ -90,8 +90,7 @@ enum {
 enum {
 	MDSS_PANEL_POWER_OFF = 0,
 	MDSS_PANEL_POWER_ON,
-	MDSS_PANEL_POWER_LP1,
-	MDSS_PANEL_POWER_LP2,
+	MDSS_PANEL_POWER_DOZE,
 };
 
 enum {
@@ -104,13 +103,6 @@ enum {
 	MODE_GPIO_NOT_VALID = 0,
 	MODE_GPIO_HIGH,
 	MODE_GPIO_LOW,
-};
-enum dsi_lane_ids {
-	DSI_LANE_0,
-	DSI_LANE_1,
-	DSI_LANE_2,
-	DSI_LANE_3,
-	DSI_LANE_MAX,
 };
 
 struct mdss_rect {
@@ -150,7 +142,6 @@ struct mdss_intf_recovery {
  * @MDSS_EVENT_UNBLANK:		Sent before first frame update from MDP is
  *				sent to panel.
  * @MDSS_EVENT_PANEL_ON:	After first frame update from MDP.
- * @MDSS_EVENT_POST_PANEL_ON	send 2nd phase panel on commands to panel
  * @MDSS_EVENT_BLANK:		MDP has no contents to display only blank screen
  *				is shown in panel. Sent before panel off.
  * @MDSS_EVENT_PANEL_OFF:	MDP has suspended frame updates, panel should be
@@ -197,7 +188,6 @@ enum mdss_intf_events {
 	MDSS_EVENT_LINK_READY,
 	MDSS_EVENT_UNBLANK,
 	MDSS_EVENT_PANEL_ON,
-	MDSS_EVENT_POST_PANEL_ON,
 	MDSS_EVENT_BLANK,
 	MDSS_EVENT_PANEL_OFF,
 	MDSS_EVENT_CLOSE,
@@ -303,7 +293,6 @@ struct mipi_panel_info {
 	char lp11_init;
 	u32  init_delay;
 	u32  post_init_delay;
-	u32  phy_lane_clamp_mask;	/*DSI physical lane clamp mask*/
 };
 
 struct edp_panel_info {
@@ -363,8 +352,6 @@ struct mdss_mdp_pp_tear_check {
 	u32 refx100;
 };
 
-struct mdss_livedisplay_ctx;
-
 struct mdss_panel_info {
 	u32 xres;
 	u32 yres;
@@ -381,7 +368,6 @@ struct mdss_panel_info {
 	u32 clk_rate;
 	u32 clk_min;
 	u32 clk_max;
-	u32 mdp_transfer_time_us;
 	u32 frame_count;
 	u32 is_3d_panel;
 	u32 out_format;
@@ -439,8 +425,6 @@ struct mdss_panel_info {
 
 	/* debugfs structure for the panel */
 	struct mdss_panel_debugfs_info *debugfs_info;
-
-	struct mdss_livedisplay_ctx *livedisplay;
 };
 
 struct mdss_panel_data {
@@ -611,26 +595,13 @@ static inline bool mdss_panel_is_power_on(int panel_power_state)
  * @panel_power_state: enum identifying the power state to be checked
  *
  * This function returns true if the panel is in an intermediate low power
- * state where it is still on but not fully interactive. It may or may not
- * accept any commands and display updates.
+ * state where it is still on but not fully interactive. It may still accept
+ * commands and display updates but would be operating in a low power mode.
  */
 static inline bool mdss_panel_is_power_on_lp(int panel_power_state)
 {
 	return !mdss_panel_is_power_off(panel_power_state) &&
 		!mdss_panel_is_power_on_interactive(panel_power_state);
-}
-
-/**
- * mdss_panel_is_panel_power_on_ulp: - checks if panel is in ultra low power mode
- * @pdata: pointer to the panel struct associated to the panel
- * @panel_power_state: enum identifying the power state to be checked
- *
- * This function returns true if the panel is in a ultra low power
- * state where it is still on but cannot recieve any display updates.
- */
-static inline bool mdss_panel_is_power_on_ulp(int panel_power_state)
-{
-	return panel_power_state == MDSS_PANEL_POWER_LP2;
 }
 
 /**
