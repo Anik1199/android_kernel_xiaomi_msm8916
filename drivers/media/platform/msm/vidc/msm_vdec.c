@@ -1153,7 +1153,7 @@ int msm_vdec_s_parm(struct msm_vidc_inst *inst, struct v4l2_streamparm *a)
 
 	if ((fps % 15 == 14) || (fps % 24 == 23))
 		fps = fps + 1;
-	else if ((fps > 1) && ((fps % 24 == 1) || (fps % 15 == 1)))
+	else if ((fps % 24 == 1) || (fps % 15 == 1))
 		fps = fps - 1;
 
 	if (inst->prop.fps != fps) {
@@ -1467,7 +1467,6 @@ int msm_vdec_s_fmt(struct msm_vidc_inst *inst, struct v4l2_format *f)
 		rc = msm_comm_try_state(inst, MSM_VIDC_OPEN_DONE);
 		if (rc) {
 			dprintk(VIDC_ERR, "Failed to open instance\n");
-			msm_comm_session_clean(inst);
 			goto err_invalid_fmt;
 		}
 
@@ -1604,7 +1603,6 @@ static int msm_vdec_queue_setup(struct vb2_queue *q,
 		rc = msm_comm_try_state(inst, MSM_VIDC_OPEN_DONE);
 		if (rc) {
 			dprintk(VIDC_ERR, "Failed to open instance\n");
-			msm_comm_session_clean(inst);
 			break;
 		}
 		rc = msm_comm_try_get_bufreqs(inst);
@@ -2265,7 +2263,6 @@ static int try_set_ctrl(struct msm_vidc_inst *inst, struct v4l2_ctrl *ctrl)
 			break;
 		}
 
-		msm_comm_scale_clocks_and_bus(inst);
 		break;
 	case V4L2_CID_MPEG_VIDC_VIDEO_ALLOC_MODE_INPUT:
 		if (ctrl->val == V4L2_MPEG_VIDC_VIDEO_DYNAMIC) {
