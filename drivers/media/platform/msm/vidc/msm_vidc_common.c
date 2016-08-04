@@ -173,13 +173,8 @@ static int msm_comm_get_inst_load(struct msm_vidc_inst *inst,
 	}
 
 	if (is_non_realtime_session(inst) &&
-		(quirks & LOAD_CALC_IGNORE_NON_REALTIME_LOAD)) {
-		if (!inst->prop.fps) {
-			dprintk(VIDC_INFO, "%s: instance:%p prop->fps is set 0\n", __func__, inst);
-			load = 0;
-		} else
-			load = msm_comm_get_mbs_per_sec(inst) / inst->prop.fps;
-	}
+		(quirks & LOAD_CALC_IGNORE_NON_REALTIME_LOAD))
+		load = msm_comm_get_mbs_per_sec(inst) / inst->prop.fps;
 	return load;
 }
 
@@ -727,24 +722,12 @@ static void handle_event_change(enum command_response cmd, void *data)
 				__func__, inst, &event_notify->packet_buffer,
 				&event_notify->extra_data_buffer);
 
-			/*
-			* If buffer release event is received with inst->state
-			* greater than STOP means client called STOP directly
-			* without FLUSH. This also means that they don't expect
-			* these buffers back. Processing these commands will not
-			* add any value. This can also results deadlocks between
-			* try_state and event_notify due to inst->sync_lock.
-			*/
-
-			mutex_lock(&inst->lock);
-			if (inst->state >= MSM_VIDC_STOP ||
+			if (inst->state == MSM_VIDC_CORE_INVALID ||
 				inst->core->state == VIDC_CORE_INVALID) {
-				dprintk(VIDC_ERR,
+				dprintk(VIDC_DBG,
 					"Event release buf ref received in invalid state - discard\n");
-				mutex_unlock(&inst->lock);
 				return;
 			}
-			mutex_unlock(&inst->lock);
 
 			/*
 			* Get the buffer_info entry for the
@@ -2178,8 +2161,6 @@ static int msm_comm_session_abort(struct msm_vidc_inst *inst)
 		return -EINVAL;
 	}
 	hdev = inst->core->device;
-	abort_completion = SESSION_MSG_INDEX(SESSION_ABORT_DONE);
-	init_completion(&inst->completions[abort_completion]);
 
 	rc = call_hfi_op(hdev, session_abort, (void *)inst->session);
 	if (rc) {
@@ -2187,6 +2168,8 @@ static int msm_comm_session_abort(struct msm_vidc_inst *inst)
 			"%s session_abort failed rc: %d\n", __func__, rc);
 		return rc;
 	}
+	abort_completion = SESSION_MSG_INDEX(SESSION_ABORT_DONE);
+	init_completion(&inst->completions[abort_completion]);
 	rc = wait_for_completion_timeout(
 			&inst->completions[abort_completion],
 			msecs_to_jiffies(msm_vidc_hw_rsp_timeout));
@@ -3553,6 +3536,7 @@ int msm_comm_try_get_prop(struct msm_vidc_inst *inst, enum hal_property ptype,
 		return -EAGAIN;
 	}
 	hdev = inst->core->device;
+	mutex_lock(&inst->sync_lock);
 	if (inst->state < MSM_VIDC_OPEN_DONE || inst->state >= MSM_VIDC_CLOSE) {
 		dprintk(VIDC_ERR,
 			"%s Not in proper state\n", __func__);
@@ -3615,6 +3599,7 @@ int msm_comm_try_get_prop(struct msm_vidc_inst *inst, enum hal_property ptype,
 	}
 	mutex_unlock(&inst->pending_getpropq.lock);
 exit:
+	mutex_unlock(&inst->sync_lock);
 	return rc;
 }
 
@@ -3891,6 +3876,7 @@ int msm_comm_try_set_prop(struct msm_vidc_inst *inst,
 	}
 	hdev = inst->core->device;
 
+	mutex_lock(&inst->sync_lock);
 	if (inst->state < MSM_VIDC_OPEN_DONE || inst->state >= MSM_VIDC_CLOSE) {
 		dprintk(VIDC_ERR, "Not in proper state to set property\n");
 		rc = -EAGAIN;
@@ -3901,6 +3887,7 @@ int msm_comm_try_set_prop(struct msm_vidc_inst *inst,
 	if (rc)
 		dprintk(VIDC_ERR, "Failed to set hal property for framesize\n");
 exit:
+	mutex_unlock(&inst->sync_lock);
 	return rc;
 }
 
