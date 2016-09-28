@@ -41,7 +41,7 @@
 */
 	i2c@78b9000 {/* BLSP1 QUP5 */
 		ftech@3E {
-			compatible = "focaltech, 5336";
+			compatible = "focaltech,5336";
 			reg = <0x3E>;
 			interrupt-parent = <&msm_gpio>;
 			interrupts = <13 0x2008>;
@@ -78,7 +78,7 @@
 		};
 
 		ist30xx@50 {
-			compatible = "imagis, ist30xx-ts";
+			compatible = "imagis,ist30xx-ts";
 			reg = <0x50>;
 			interrupt-parent = <&msm_gpio>;
 			interrupts = <13 0x2008>;
@@ -96,7 +96,7 @@
    };
 i2c@78ba000 {/* i2c 6 */
 	aw2013@45 {/*blink */
-		compatible = "awinc, aw2013";
+		compatible = "awinc,aw2013";
 		reg = <0x45>;
 		rgb_led-supply = <&pm8916_l16>;
 
@@ -480,7 +480,7 @@ sound {
 
 
 	akm@c {
-		compatible = "ak, ak09911";
+		compatible = "ak,ak09911";
 		reg = <0x0c>;
 		vdd-supply = <&pm8916_l17>;
 		vio-supply = <&pm8916_l6>;
@@ -490,7 +490,7 @@ sound {
 	};
 
 	yamaha@2e {/* Magnetic field sensor */
-		compatible = "yamaha, yas537";
+		compatible = "yamaha,yas537";
 		reg = <0x2e>;
 		vdd-supply = <&pm8916_l17>;
 		vio-supply = <&pm8916_l6>;

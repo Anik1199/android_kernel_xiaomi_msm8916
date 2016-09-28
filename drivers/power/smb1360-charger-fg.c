@@ -3862,8 +3862,8 @@ static int smb_parse_batt_id(struct smb1360_chip *chip)
 }
 
 /*
- * Be noted that if you do not define "qcom, config-hard-thresholds"
- * and "qcom, soft-jeita-supported", SMB1360 will follow its default
+ * Be noted that if you do not define "qcom,config-hard-thresholds"
+ * and "qcom,soft-jeita-supported", SMB1360 will follow its default
  * setting which programed initially. Soft JEITA only disables when
  * you explictly config hard thresholds.
  */
@@ -4103,7 +4103,7 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 		return -EINVAL;
 	}
 
-	if (of_property_read_bool(node, "qcom, batt-profile-select")) {
+	if (of_property_read_bool(node, "qcom,batt-profile-select")) {
 		rc = smb_parse_batt_id(chip);
 		if (rc < 0) {
 			if (rc != -EPROBE_DEFER)
@@ -4112,9 +4112,9 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 		}
 	}
 
-	chip->pulsed_irq = of_property_read_bool(node, "qcom, stat-pulsed-irq");
+	chip->pulsed_irq = of_property_read_bool(node, "qcom,stat-pulsed-irq");
 
-	rc = of_property_read_u32(node, "qcom, float-voltage-mv",
+	rc = of_property_read_u32(node, "qcom,float-voltage-mv",
 						&chip->vfloat_mv);
 	if (rc < 0)
 		chip->vfloat_mv = -EINVAL;
@@ -4135,7 +4135,7 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 	if (rc < 0)
 		chip->resume_delta_mv = -EINVAL;
 
-	rc = of_property_read_u32(node, "qcom, warm-recharge-thresh-mv",
+	rc = of_property_read_u32(node, "qcom,warm-recharge-thresh-mv",
 						&chip->warm_recharge_mv);
 	if (rc < 0)
 		chip->warm_recharge_mv = -EINVAL;
@@ -4162,7 +4162,7 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 	chip->shdn_after_pwroff = of_property_read_bool(node,
 						"qcom,shdn-after-pwroff");
 
-	if (of_find_property(node, "qcom, thermal-mitigation",
+	if (of_find_property(node, "qcom,thermal-mitigation",
 					&chip->thermal_levels)) {
 		chip->thermal_mitigation = devm_kzalloc(chip->dev,
 					chip->thermal_levels,
@@ -4190,7 +4190,7 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 	}
 
 	/* fg params */
-	rc = of_property_read_u32(node, "qcom, fg-delta-soc", &chip->delta_soc);
+	rc = of_property_read_u32(node, "qcom,fg-delta-soc", &chip->delta_soc);
 	if (rc < 0)
 		chip->delta_soc = -EINVAL;
 
@@ -4202,7 +4202,7 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 	if (rc < 0)
 		chip->soc_min = -EINVAL;
 
-	rc = of_property_read_u32(node, "qcom, fg-voltage-min-mv",
+	rc = of_property_read_u32(node, "qcom,fg-voltage-min-mv",
 					&chip->voltage_min_mv);
 	if (rc < 0)
 		chip->voltage_min_mv = -EINVAL;
@@ -4247,11 +4247,11 @@ static int smb_parse_dt(struct smb1360_chip *chip)
 	if (rc < 0)
 		chip->fg_cc_to_cv_mv = -EINVAL;
 
-	rc = of_property_read_u32(node, "qcom, chg-pre-to-fast-mv",
+	rc = of_property_read_u32(node, "qcom,chg-pre-to-fast-mv",
 					&chip->pre_to_fast_charge_mv);
 	if (rc < 0)
 		chip->pre_to_fast_charge_mv = -EINVAL;
-	rc = of_property_read_u32(node, "qcom, otg-batt-curr-limit",
+	rc = of_property_read_u32(node, "qcom,otg-batt-curr-limit",
 					&chip->otg_batt_curr_limit);
 	if (rc < 0)
 		chip->otg_batt_curr_limit = -EINVAL;

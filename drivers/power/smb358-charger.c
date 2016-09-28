@@ -2470,7 +2470,7 @@ static int smb_parse_dt(struct smb358_charger *chip)
 			chip->jeita_supported = true;
 	}
 
-	if (of_find_property(node, "qcom, thermal-mitigation",
+	if (of_find_property(node, "qcom,thermal-mitigation",
 					&chip->thermal_levels)) {
 		chip->thermal_mitigation = devm_kzalloc(chip->dev,
 				chip->thermal_levels,
@@ -2483,7 +2483,7 @@ static int smb_parse_dt(struct smb358_charger *chip)
 
 		chip->thermal_levels /= sizeof(int);
 		rc = of_property_read_u32_array(node,
-				"qcom, thermal-mitigation",
+				"qcom,thermal-mitigation",
 				chip->thermal_mitigation, chip->thermal_levels);
 		printk("thermal_mitigations = %d, %d, %d, %d; thermal_levels = %d\n", chip->thermal_mitigation[0], chip->thermal_mitigation[1], chip->thermal_mitigation[2], chip->thermal_mitigation[3], chip->thermal_levels);
 		if (rc) {
@@ -2511,7 +2511,7 @@ static int smb_parse_dt(struct smb358_charger *chip)
 	}
 
 
-	rc = of_property_read_u32(node, "qcom, battery-fcc",
+	rc = of_property_read_u32(node, "qcom,battery-fcc",
 						&chip->fcc_mah);
 	if (rc)
 		chip->fcc_mah = BATTERY_FCC;

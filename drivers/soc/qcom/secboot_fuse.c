@@ -91,7 +91,7 @@ static int secboot_fuse_remove(struct platform_device *pdev)
 }
 
 static struct of_device_id secboot_fuse_match[] = {
-	{.compatible = "qcom, sec-boot-fuse"},
+	{.compatible = "qcom,sec-boot-fuse"},
 	{}
 };
 

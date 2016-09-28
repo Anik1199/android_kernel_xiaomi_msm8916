@@ -568,7 +568,7 @@ static struct aw2013_leds_priv *aw2013_leds_create_of(struct i2c_client *client)
 
 		led.name = of_get_property(child, "label", NULL) ? : child->name;
 		led.default_trigger =
-			of_get_property(child, "linux, default-trigger", NULL);
+			of_get_property(child, "linux,default-trigger", NULL);
 		led.retain_state_suspended =
 			(unsigned)of_property_read_bool(child,
 				"retain-state-suspended");

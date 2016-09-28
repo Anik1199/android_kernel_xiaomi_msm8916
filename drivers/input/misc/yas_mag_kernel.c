@@ -861,13 +861,13 @@ static int sensor_parse_dt(struct device *dev,
 	pdata->exit = sensor_platform_hw_exit;
 	pdata->power_on = sensor_platform_hw_power_on;
 
-	rc = of_property_read_u32(np, "yas, position",
+	rc = of_property_read_u32(np, "yas,position",
 							  &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw delay read id\n");
 		return rc;
 	} else if (rc != -EINVAL) {
-		printk("yas, position=%d, \n", temp_val);
+		printk("yas,position=%d, \n", temp_val);
 		pdata->position =  temp_val;
 		}
 
@@ -1195,7 +1195,7 @@ MODULE_DEVICE_TABLE(i2c, yas_id);
 
 
 static struct of_device_id yas_match_table[] = {
-	{.compatible = "yamaha, yas537",},
+	{.compatible = "yamaha,yas537",},
 	{},
 };
 

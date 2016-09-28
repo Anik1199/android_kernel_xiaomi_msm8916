@@ -1908,36 +1908,36 @@ static int sm5414_parse_dt(struct sm5414_charger *chip)
 	pr_info("%s: SM5703_parse_dt nshdn: %d\n", __func__, chip->irq_gpio);
 
 	chip->charging_disabled = of_property_read_bool(node,
-					"qcom, charger-disabled");
+					"qcom,charger-disabled");
 
 	chip->using_pmic_therm = of_property_read_bool(node,
-						"qcom, using-pmic-therm");
+						"qcom,using-pmic-therm");
 
-	rc = of_property_read_string(node, "qcom, bms-psy-name",
+	rc = of_property_read_string(node, "qcom,bms-psy-name",
 						&chip->bms_psy_name);
 	if (rc)
 		chip->bms_psy_name = NULL;
 
 	chip->chg_valid_gpio = of_get_named_gpio_flags(node,
-				"qcom, chg-valid-gpio", 0, &gpio_flags);
+				"qcom,chg-valid-gpio", 0, &gpio_flags);
 	if (!gpio_is_valid(chip->chg_valid_gpio))
 		dev_dbg(chip->dev, "Invalid chg-valid-gpio");
 	else
 		chip->chg_valid_act_low = gpio_flags & OF_GPIO_ACTIVE_LOW;
 
-	rc = of_property_read_u32(node, "qcom, fastchg-current-max-ma",
+	rc = of_property_read_u32(node, "qcom,fastchg-current-max-ma",
 						&chip->fastchg_current_max_ma);
 	if (rc)
 		chip->fastchg_current_max_ma = SM5414_FAST_CHG_MAX_MA;
 
 	chip->iterm_disabled = of_property_read_bool(node,
-					"qcom, iterm-disabled");
+					"qcom,iterm-disabled");
 
-	rc = of_property_read_u32(node, "qcom, iterm-ma", &chip->iterm_ma);
+	rc = of_property_read_u32(node, "qcom,iterm-ma", &chip->iterm_ma);
 	if (rc < 0)
 		chip->iterm_ma = -EINVAL;
 
-	rc = of_property_read_u32(node, "qcom, float-voltage-mv",
+	rc = of_property_read_u32(node, "qcom,float-voltage-mv",
 						&chip->vfloat_mv);
 	if (rc < 0) {
 		chip->vfloat_mv = -EINVAL;
@@ -1945,33 +1945,33 @@ static int sm5414_parse_dt(struct sm5414_charger *chip)
 		return -EINVAL;
 	}
 
-	rc = of_property_read_u32(node, "qcom, cold-bat-decidegc",
+	rc = of_property_read_u32(node, "qcom,cold-bat-decidegc",
 						&chip->cold_bat_decidegc);
 	if (rc < 0)
 		chip->cold_bat_decidegc = -EINVAL;
 
-	rc = of_property_read_u32(node, "qcom, hot-bat-decidegc",
+	rc = of_property_read_u32(node, "qcom,hot-bat-decidegc",
 						&chip->hot_bat_decidegc);
 	if (rc < 0)
 		chip->hot_bat_decidegc = -EINVAL;
 
-	rc = of_property_read_u32(node, "qcom, warm-bat-decidegc",
+	rc = of_property_read_u32(node, "qcom,warm-bat-decidegc",
 						&chip->warm_bat_decidegc);
 
-	rc |= of_property_read_u32(node, "qcom, cool-bat-decidegc",
+	rc |= of_property_read_u32(node, "qcom,cool-bat-decidegc",
 						&chip->cool_bat_decidegc);
 
 	if (!rc) {
-		rc = of_property_read_u32(node, "qcom, cool-bat-mv",
+		rc = of_property_read_u32(node, "qcom,cool-bat-mv",
 						&chip->cool_bat_mv);
 
-		rc |= of_property_read_u32(node, "qcom, warm-bat-mv",
+		rc |= of_property_read_u32(node, "qcom,warm-bat-mv",
 						&chip->warm_bat_mv);
 
-		rc |= of_property_read_u32(node, "qcom, cool-bat-ma",
+		rc |= of_property_read_u32(node, "qcom,cool-bat-ma",
 						&chip->cool_bat_ma);
 
-		rc |= of_property_read_u32(node, "qcom, warm-bat-ma",
+		rc |= of_property_read_u32(node, "qcom,warm-bat-ma",
 						&chip->warm_bat_ma);
 		if (rc)
 			chip->jeita_supported = false;
@@ -1981,14 +1981,14 @@ static int sm5414_parse_dt(struct sm5414_charger *chip)
 
 	pr_debug("jeita_supported = %d", chip->jeita_supported);
 
-	rc = of_property_read_u32(node, "qcom, bat-present-decidegc",
+	rc = of_property_read_u32(node, "qcom,bat-present-decidegc",
 						&batt_present_degree_negative);
 	if (rc < 0)
 		chip->bat_present_decidegc = -EINVAL;
 	else
 		chip->bat_present_decidegc = -batt_present_degree_negative;
 
-	if (of_get_property(node, "qcom, vcc-i2c-supply", NULL)) {
+	if (of_get_property(node, "qcom,vcc-i2c-supply", NULL)) {
 		chip->vcc_i2c = devm_regulator_get(chip->dev, "vcc-i2c");
 		if (IS_ERR(chip->vcc_i2c)) {
 			dev_err(chip->dev,
@@ -2439,7 +2439,7 @@ void sm5414_change_current_backlight_onoff(bool sw, int cur)
 	struct device_node *node;
 	if (pSm5414) {
 		node = pSm5414->dev->of_node;
-		rc = of_property_read_u32(node, "qcom, fastchg-current-max-ma",
+		rc = of_property_read_u32(node, "qcom,fastchg-current-max-ma",
 						&origin_current);
 		temp = sm5414_get_prop_batt_temp(pSm5414);
 
@@ -2464,7 +2464,7 @@ static const struct dev_pm_ops sm5414_pm_ops = {
 };
 
 static struct of_device_id sm5414_match_table[] = {
-	{.compatible = "qcom, sm5414-charger",},
+	{.compatible = "qcom,sm5414-charger",},
 	{},
 };
 

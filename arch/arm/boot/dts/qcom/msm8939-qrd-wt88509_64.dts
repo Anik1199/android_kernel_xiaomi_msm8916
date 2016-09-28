@@ -153,7 +153,7 @@
 	status = "ok";
 	};
 	cw2015: cw2015@62 {
-	compatible = "cellwise, cw2015";
+	compatible = "cellwise,cw2015";
 	reg = <0x62>;
 	vdd-supply = <&pm8916_l17>;
 	vcc_i2c-supply = <&pm8916_l6>;

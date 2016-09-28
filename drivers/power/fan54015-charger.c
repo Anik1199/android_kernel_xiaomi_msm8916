@@ -839,7 +839,7 @@ static int  fan54015_resume(struct i2c_client *client)
 }
 
 static struct of_device_id fan54015_match_table[] = {
-	{.compatible = "freescale, fan54015-chg",},
+	{.compatible = "freescale,fan54015-chg",},
 	{},
 };
 

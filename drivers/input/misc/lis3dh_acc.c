@@ -2186,11 +2186,9 @@ static int lis3dh_parse_dt(struct device *dev,
 
 	pdata->enable_int = of_property_read_bool(np, "st,enable-int");
 
-	pdata->gpio_int1 = of_get_named_gpio_flags(dev->of_node,
-				"st,gpio-int1", 0, NULL);
+	pdata->gpio_int1 = of_get_named_gpio_flags(dev->of_node, "st,gpio-int1", 0, NULL);
 
-	pdata->gpio_int2 = of_get_named_gpio_flags(dev->of_node,
-				"st,gpio-int2", 0, NULL);
+	pdata->gpio_int2 = of_get_named_gpio_flags(dev->of_node, "st,gpio-int2", 0, NULL);
 	return 0;
 }
 #else
@@ -2233,9 +2231,7 @@ static int lis3dh_acc_probe(struct i2c_client *client,
 	acc->pdata = kmalloc(sizeof(*acc->pdata), GFP_KERNEL);
 	if (acc->pdata == NULL) {
 		err = -ENOMEM;
-		dev_err(&client->dev,
-				"failed to allocate memory for pdata: %d\n",
-				err);
+		dev_err(&client->dev, "failed to allocate memory for pdata: %d\n", err);
 		goto err_mutexunlock;
 	}
 	memset(acc->pdata, 0 , sizeof(*acc->pdata));

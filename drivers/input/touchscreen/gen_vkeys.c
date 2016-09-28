@@ -101,8 +101,7 @@ static int vkey_parse_dt(struct device *dev,
 			sizeof(u32) * pdata->num_keys, GFP_KERNEL);
 		if (!pdata->keycodes)
 			return -ENOMEM;
-		rc = of_property_read_u32_array(np, "qcom,key-codes",
-				pdata->keycodes, pdata->num_keys);
+		rc = of_property_read_u32_array(np, "qcom,key-codes", pdata->keycodes, pdata->num_keys);
 		if (rc) {
 			dev_err(dev, "Failed to read key codes\n");
 			return -EINVAL;

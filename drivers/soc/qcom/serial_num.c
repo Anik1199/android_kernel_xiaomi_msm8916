@@ -91,7 +91,7 @@ static int sn_fuse_remove(struct platform_device *pdev)
 }
 
 static struct of_device_id sn_fuse_match[] = {
-	{.compatible = "qcom, sn-fuse"},
+	{.compatible = "qcom,sn-fuse"},
 	{}
 };
 

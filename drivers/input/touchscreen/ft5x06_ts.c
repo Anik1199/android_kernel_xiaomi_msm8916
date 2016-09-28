@@ -1945,19 +1945,15 @@ static int ft5x06_parse_dt(struct device *dev,
 	if (rc)
 		return rc;
 
-	pdata->i2c_pull_up = of_property_read_bool(np,
-						"focaltech,i2c-pull-up");
+	pdata->i2c_pull_up = of_property_read_bool(np, "focaltech,i2c-pull-up");
 
-	pdata->no_force_update = of_property_read_bool(np,
-						"focaltech,no-force-update");
+	pdata->no_force_update = of_property_read_bool(np, "focaltech,no-force-update");
 	/* reset, irq gpio info */
-	pdata->reset_gpio = of_get_named_gpio_flags(np, "focaltech,reset-gpio",
-				0, &pdata->reset_gpio_flags);
+	pdata->reset_gpio = of_get_named_gpio_flags(np, "focaltech,reset-gpio", 0, &pdata->reset_gpio_flags);
 	if (pdata->reset_gpio < 0)
 		return pdata->reset_gpio;
 
-	pdata->irq_gpio = of_get_named_gpio_flags(np, "focaltech,irq-gpio",
-				0, &pdata->irq_gpio_flags);
+	pdata->irq_gpio = of_get_named_gpio_flags(np, "focaltech,irq-gpio", 0, &pdata->irq_gpio_flags);
 	if (pdata->irq_gpio < 0)
 		return pdata->irq_gpio;
 
@@ -1974,15 +1970,13 @@ static int ft5x06_parse_dt(struct device *dev,
 	else
 		return rc;
 
-	rc = of_property_read_u32(np, "focaltech,hard-reset-delay-ms",
-							&temp_val);
+	rc = of_property_read_u32(np, "focaltech,hard-reset-delay-ms", &temp_val);
 	if (!rc)
 		pdata->hard_rst_dly = temp_val;
 	else
 		return rc;
 
-	rc = of_property_read_u32(np, "focaltech,soft-reset-delay-ms",
-							&temp_val);
+	rc = of_property_read_u32(np, "focaltech,soft-reset-delay-ms", &temp_val);
 	if (!rc)
 		pdata->soft_rst_dly = temp_val;
 	else
@@ -2022,32 +2016,27 @@ static int ft5x06_parse_dt(struct device *dev,
 	} else if (rc != -EINVAL)
 		pdata->info.upgrade_id_2 =  temp_val;
 
-	rc = of_property_read_u32(np, "focaltech,fw-delay-readid-ms",
-							&temp_val);
+	rc = of_property_read_u32(np, "focaltech,fw-delay-readid-ms", &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw delay read id\n");
 		return rc;
 	} else if (rc != -EINVAL)
 		pdata->info.delay_readid =  temp_val;
 
-	rc = of_property_read_u32(np, "focaltech,fw-delay-era-flsh-ms",
-							&temp_val);
+	rc = of_property_read_u32(np, "focaltech,fw-delay-era-flsh-ms", &temp_val);
 	if (rc && (rc != -EINVAL)) {
 		dev_err(dev, "Unable to read fw delay erase flash\n");
 		return rc;
 	} else if (rc != -EINVAL)
 		pdata->info.delay_erase_flash =  temp_val;
 
-	pdata->info.auto_cal = of_property_read_bool(np,
-					"focaltech,fw-auto-cal");
+	pdata->info.auto_cal = of_property_read_bool(np, "focaltech,fw-auto-cal");
 
-	pdata->fw_vkey_support = of_property_read_bool(np,
-						"focaltech,fw-vkey-support");
+	pdata->fw_vkey_support = of_property_read_bool(np, "focaltech,fw-vkey-support");
 
-	pdata->ignore_id_check = of_property_read_bool(np,
-						"focaltech,ignore-id-check");
+	pdata->ignore_id_check = of_property_read_bool(np, "focaltech,ignore-id-check");
 
-	rc = of_property_read_u32(np, "focaltech, family-id", &temp_val);
+	rc = of_property_read_u32(np, "focaltech,family-id", &temp_val);
 	if (!rc)
 		pdata->family_id = temp_val;
 	else
@@ -2059,9 +2048,7 @@ static int ft5x06_parse_dt(struct device *dev,
 		if (num_buttons > MAX_BUTTONS)
 			return -EINVAL;
 
-		rc = of_property_read_u32_array(np,
-			"focaltech,button-map", button_map,
-			num_buttons);
+		rc = of_property_read_u32_array(np, "focaltech,button-map", button_map, num_buttons);
 		if (rc) {
 			dev_err(dev, "Unable to read key codes\n");
 			return rc;

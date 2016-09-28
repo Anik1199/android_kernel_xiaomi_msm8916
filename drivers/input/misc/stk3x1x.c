@@ -3584,8 +3584,7 @@ static int stk3x1x_parse_dt(struct device *dev,
 	struct device_node *np = dev->of_node;
 	u32 temp_val;
 
-	pdata->int_pin = of_get_named_gpio_flags(np, "stk,irq-gpio",
-				0, &pdata->int_flags);
+	pdata->int_pin = of_get_named_gpio_flags(np, "stk,irq-gpio", 0, &pdata->int_flags);
 	if (pdata->int_pin < 0) {
 		dev_err(dev, "Unable to read irq-gpio\n");
 		return pdata->int_pin;
@@ -3639,7 +3638,7 @@ static int stk3x1x_parse_dt(struct device *dev,
 		return rc;
 	}
 
-	rc = of_property_read_u32(np, "stk, ps-thd-h", &temp_val);
+	rc = of_property_read_u32(np, "stk,ps-thd-h", &temp_val);
 	if (!rc)
 		pdata->ps_thd_h = (u16)temp_val;
 	else {
@@ -3647,7 +3646,7 @@ static int stk3x1x_parse_dt(struct device *dev,
 		return rc;
 	}
 
-	rc = of_property_read_u32(np, "stk, ps-thd-l", &temp_val);
+	rc = of_property_read_u32(np, "stk,ps-thd-l", &temp_val);
 	if (!rc)
 		pdata->ps_thd_l = (u16)temp_val;
 	else {

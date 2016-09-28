@@ -863,8 +863,7 @@ static const struct dev_pm_ops cw_bat_pm_ops = {
 static int cw_bat_parse_dt(struct device *dev, struct cw_bat_platform_data *pdata)
 {
 	struct device_node *np = dev->of_node;
-	pdata->bat_low_pin = of_get_named_gpio_flags(np,
-			"cw2015, irq-gpio", 0, &pdata->irq_flags);
+	pdata->bat_low_pin = of_get_named_gpio_flags(np, "cw2015,irq-gpio", 0, &pdata->irq_flags);
 
 	return 0;
 }
@@ -1269,7 +1268,7 @@ static const struct i2c_device_id cw_id[] = {
 MODULE_DEVICE_TABLE(i2c, cw_id);
 
 static struct of_device_id cw2015_match_table[] = {
-	{.compatible = "cellwise, cw2015",},
+	{.compatible = "cellwise,cw2015",},
 	{},
 };
 static struct i2c_driver cw_bat_driver = {
