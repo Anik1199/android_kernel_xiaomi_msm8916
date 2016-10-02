@@ -35,7 +35,6 @@
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/gpio.h>
-#include <linux/input.h>
 #include <linux/interrupt.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -70,58 +69,17 @@ struct fpc1020_data {
 	struct clk *core_clk;
 	int irq_gpio;
 	int rst_gpio;
-	struct input_dev *idev;
 	int irq_num;
-	char idev_name[32];
 	int event_type;
 	int event_code;
 	struct mutex lock;
 	bool prepared;
 	int  wakeup_enabled;
 	struct wake_lock	ttw_wl;
-	bool irq_interest;
 };
 char boardid_info_fingerprint[HARDWARE_MAX_ITEM_LONGTH] = {0,};
-/**
- * Changes ownership of SPI transfers from TEE to REE side or vice versa.
- *
- * SPI transfers can be owned only by one of TEE or REE side at any given time.
- * This can be changed dynamically if needed but of course that needs support
- * from underlaying layers. This function will transfer the ownership from REE
- * to TEE or vice versa.
- *
- * If REE side uses the SPI master when TEE owns the pipe or vice versa the
- * system will most likely crash dump.
- *
- * If available this should be set at boot time to eg. TEE side and not
- * dynamically as that will increase the security of the system. This however
- * implies that there are no other SPI slaves connected that should be handled
- * from REE side.
- *
- * @see SET_PIPE_OWNERSHIP
- */
-static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
-{
-	struct fpc1020_data *fpc1020 = handle;
-
-	/* Make sure 'wakeup_enabled' is updated before using it
-	** since this is interrupt context (other thread...) */
-	smp_rmb();
-
-	if (fpc1020->wakeup_enabled) {
-		wake_lock_timeout(&fpc1020->ttw_wl, msecs_to_jiffies(FPC_TTW_HOLD_TIME));
-		dev_info(fpc1020->dev, "%s - wake_lock_timeout\n", __func__);
-	}
 
 
-
-	if (fpc1020->irq_interest) {
-		input_event(fpc1020->idev, EV_MSC, MSC_SCAN, ++fpc1020->irq_num);
-		input_sync(fpc1020->idev);
-	}
-	dev_info(fpc1020->dev, "%s %d\n", __func__, fpc1020->irq_num);
-	return IRQ_HANDLED;
-}
 
 static int fpc1020_request_named_gpio(struct fpc1020_data *fpc1020,
 		const char *label, int *gpio)
@@ -143,31 +101,6 @@ static int fpc1020_request_named_gpio(struct fpc1020_data *fpc1020,
 	return 0;
 }
 
-#ifdef SET_PIPE_OWNERSHIP
-static int set_pipe_ownership(struct fpc1020_data *fpc1020, bool to_tz)
-{
-	int rc;
-	const u32 TZ_BLSP_MODIFY_OWNERSHIP_ID = 3;
-	const u32 TZBSP_APSS_ID = 1;
-	const u32 TZBSP_TZ_ID = 3;
-	struct scm_desc desc = {
-		.arginfo = SCM_ARGS(2),
-
-		.args[0] = to_tz ? TZBSP_TZ_ID : TZBSP_APSS_ID,
-	};
-
-	rc = scm_call2(SCM_SIP_FNID(SCM_SVC_TZ, TZ_BLSP_MODIFY_OWNERSHIP_ID),
-		&desc);
-
-	if (rc || desc.ret[0]) {
-		dev_err(fpc1020->dev, "%s: scm_call2: responce %llu, rc %d\n",
-				__func__, desc.ret[0], rc);
-		return -EINVAL;
-	}
-	dev_err(fpc1020->dev, "%s: scm_call2: ok\n", __func__);
-	return 0;
-}
-#endif
 static int set_clks(struct fpc1020_data *fpc1020, bool enable)
 {
 	int rc;
@@ -337,17 +270,8 @@ static int device_prepare(struct  fpc1020_data *fpc1020, bool enable)
 
 		usleep_range(100, 1000);
 
-#ifdef SET_PIPE_OWNERSHIP
-		rc = set_pipe_ownership(fpc1020, true);
-		if (rc)
-			goto exit_5;
-#endif
 	} else if (!enable && fpc1020->prepared) {
 		rc = 0;
-#ifdef SET_PIPE_OWNERSHIP
-		(void)set_pipe_ownership(fpc1020, false);
-exit_5:
-#endif
 		(void)set_clks(fpc1020, false);
 exit_4:
 
@@ -380,6 +304,31 @@ static ssize_t spi_prepare_set(struct device *dev,
 }
 static DEVICE_ATTR(spi_prepare, S_IWUSR, NULL, spi_prepare_set);
 
+
+/**
+ * sysfs node for controlling whether the driver is allowed
+ * to wake up the platform on interrupt.
+ */
+static ssize_t wakeup_enable_set(struct device *dev,
+				 struct device_attribute *attr, const char *buf,
+				 size_t count)
+{
+	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
+
+	if (!strncmp(buf, "enable", strlen("enable"))) {
+		fpc1020->wakeup_enabled = true;
+		smp_wmb();
+	} else if (!strncmp(buf, "disable", strlen("disable"))) {
+		fpc1020->wakeup_enabled = false;
+		smp_wmb();
+	} else
+		return -EINVAL;
+
+	return count;
+}
+
+static DEVICE_ATTR(wakeup_enable, S_IWUSR | S_IWGRP | S_IWOTH, NULL, wakeup_enable_set);
+
 /**
  * sysf node to check the interrupt status of the sensor, the interrupt
  * handler should perform sysf_notify to allow userland to poll the node.
@@ -393,74 +342,22 @@ static ssize_t irq_get(struct device *device,
 	return scnprintf(buffer, PAGE_SIZE, "%i\n", irq);
 }
 
-static DEVICE_ATTR(irq, S_IRUSR | S_IWUSR, irq_get, NULL);
-static ssize_t irq_interest_set(struct device *dev,
-	struct device_attribute *attr, const char *buf, size_t count)
+/**
+ * writing to the irq node will just drop a printk message
+ * and return success, used for latency measurement.
+ */
+static ssize_t irq_ack(struct device* device,
+			     struct device_attribute* attribute,
+			     const char* buffer, size_t count)
 {
-	struct  fpc1020_data *fpc1020 = dev_get_drvdata(dev);
-	if (!strncmp(buf, "enable", strlen("enable"))) {
-		fpc1020->irq_interest = true;
-		smp_wmb();
-	} else if (!strncmp(buf, "disable", strlen("disable"))) {
-		fpc1020->irq_interest = false;
-		smp_wmb();
-	} else
-		return -EINVAL;
+	struct fpc1020_data* fpc1020 = dev_get_drvdata(device);
+	dev_dbg(fpc1020->dev, "%s\n", __func__);
 	return count;
 }
-static DEVICE_ATTR(irq_interest, S_IWUSR, NULL, irq_interest_set);
-static ssize_t compatible_all_set(struct device *dev,
-			struct device_attribute *attr, const char *buf, size_t count)
-{
-	int rc;
-	int irqf;
-	struct  fpc1020_data *fpc1020 = dev_get_drvdata(dev);
 
-	printk("heming add : compatible_all_set = %s\n", buf);
-	if (!strncmp(buf, "enable", strlen("enable"))) {
-		rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_irq",
-				&fpc1020->irq_gpio);
-		if (rc)
-			goto exit;
-		rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_rst",
-				&fpc1020->rst_gpio);
-		if (rc)
-			goto exit;
-		irqf = IRQF_TRIGGER_RISING | IRQF_ONESHOT;
-		if (of_property_read_bool(dev->of_node, "fpc,enable-wakeup")) {
-			irqf |= IRQF_NO_SUSPEND;
-			device_init_wakeup(dev, 1);
-			fpc1020->wakeup_enabled = 1;
-			enable_irq_wake(gpio_to_irq(fpc1020->irq_gpio));
-			pr_info("%s enable-wakeup\n", __func__);
-		}
-		rc = devm_request_threaded_irq(dev, gpio_to_irq(fpc1020->irq_gpio),
-			NULL, fpc1020_irq_handler, irqf,
-			dev_name(dev), fpc1020);
-		if (rc) {
-			dev_err(dev, "could not request irq %d\n",
-					gpio_to_irq(fpc1020->irq_gpio));
-			goto exit;
-		}
-		dev_err(dev, "requested irq %d\n", gpio_to_irq(fpc1020->irq_gpio));
-	} else if (!strncmp(buf, "disable", strlen("disable"))) {
-		if (gpio_is_valid(fpc1020->irq_gpio)) {
-			devm_gpio_free(dev, fpc1020->irq_gpio);
-			pr_info("remove irq_gpio success\n");
-		}
-		if (gpio_is_valid(fpc1020->rst_gpio)) {
-			devm_gpio_free(dev, fpc1020->rst_gpio);
-			pr_info("remove rst_gpio success\n");
-		}
-		devm_free_irq(dev, gpio_to_irq(fpc1020->irq_gpio), fpc1020);
+static DEVICE_ATTR(irq, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH, irq_get, irq_ack);
 
-	}
-	return count;
 
-exit:
-	return -EINVAL;
-}
-static DEVICE_ATTR(compatible_all, S_IWUSR, NULL, compatible_all_set);
 static struct attribute *attributes[] = {
 	&dev_attr_pinctl_set.attr,
 	&dev_attr_clk_enable.attr,
@@ -469,9 +366,8 @@ static struct attribute *attributes[] = {
 
 
 	&dev_attr_hw_reset.attr,
+	&dev_attr_wakeup_enable.attr,
 	&dev_attr_irq.attr,
-	&dev_attr_irq_interest.attr,
-	&dev_attr_compatible_all.attr,
 	NULL
 };
 
@@ -479,28 +375,34 @@ static const struct attribute_group attribute_group = {
 	.attrs = attributes,
 };
 
-void parse_cmldine_for_fingerprint(struct device *dev)
+static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
 {
-	char *boadrid_start;
+	struct fpc1020_data *fpc1020 = handle;
 
-	boadrid_start = strstr(saved_command_line, "board_id=");
+	/* Make sure 'wakeup_enabled' is updated before using it
+	** since this is interrupt context (other thread...) */
+	smp_rmb();
 
-	if (boadrid_start != NULL) {
-		strncpy(boardid_info_fingerprint, boadrid_start+sizeof("board_id=")-1, 12);
-		dev_info(dev, "%s: is ok %s \n", __func__, boardid_info_fingerprint);
-	} else
-		pr_debug("boarid not define!\n");
+	if (fpc1020->wakeup_enabled) {
+		wake_lock_timeout(&fpc1020->ttw_wl, msecs_to_jiffies(FPC_TTW_HOLD_TIME));
+		dev_info(fpc1020->dev, "%s - wake_lock_timeout\n", __func__);
+	}
+
+	sysfs_notify(&fpc1020->dev->kobj, NULL, dev_attr_irq.attr.name);
+
+	dev_info(fpc1020->dev, "%s %d\n", __func__, fpc1020->irq_num);
+	return IRQ_HANDLED;
 }
 
 static int fpc1020_probe(struct  platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	int rc = 0;
+	int irqf;
 	size_t i;
 
 	struct device_node *np = dev->of_node;
-	u32 val;
-	const char *idev_name;
+
 	struct fpc1020_data *fpc1020 = devm_kzalloc(dev, sizeof(*fpc1020),
 			GFP_KERNEL);
 	if (!fpc1020) {
@@ -511,9 +413,6 @@ static int fpc1020_probe(struct  platform_device *pdev)
 	}
 
 	pr_info("%s - ", __func__);
-	parse_cmldine_for_fingerprint(dev);
-	if (strcmp(boardid_info_fingerprint, "S88509A1_M27") == 0)
-		return -EPERM;
 
 	fpc1020->dev = dev;
 	dev_set_drvdata(dev, fpc1020);
@@ -524,7 +423,6 @@ static int fpc1020_probe(struct  platform_device *pdev)
 		goto exit;
 	}
 
-	fpc1020->wakeup_enabled = 0;
 
 	fpc1020->iface_clk = clk_get(dev, "iface_clk");
 	if (IS_ERR(fpc1020->iface_clk)) {
@@ -532,6 +430,16 @@ static int fpc1020_probe(struct  platform_device *pdev)
 		rc = -EINVAL;
 		goto exit;
 	}
+
+	rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_irq",
+					&fpc1020->irq_gpio);
+	if (rc)
+		goto exit;
+	rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_rst",
+					&fpc1020->rst_gpio);
+	if (rc)
+		goto exit;
+
 
 	fpc1020->core_clk = clk_get(dev, "core_clk");
 	if (IS_ERR(fpc1020->core_clk)) {
@@ -575,49 +483,42 @@ static int fpc1020_probe(struct  platform_device *pdev)
 		goto exit;
 
 
-
-
-	rc = of_property_read_u32(np, "fpc,event-type", &val);
-	fpc1020->event_type = rc < 0 ? EV_MSC : val;
-
-	rc = of_property_read_u32(np, "fpc,event-code", &val);
-	fpc1020->event_code = rc < 0 ? MSC_SCAN : val;
-
-	fpc1020->idev = devm_input_allocate_device(dev);
-	if (!fpc1020->idev) {
-		dev_err(dev, "failed to allocate input device\n");
-		rc = -ENOMEM;
-		goto exit;
+	//irq
+	fpc1020->wakeup_enabled = false;
+	irqf = IRQF_TRIGGER_RISING | IRQF_ONESHOT;
+	if (of_property_read_bool(dev->of_node, "fpc,enable-wakeup")) {
+		irqf |= IRQF_NO_SUSPEND;
+		device_init_wakeup(dev, 1);
 	}
-	input_set_capability(fpc1020->idev, fpc1020->event_type,
-			fpc1020->event_code);
-
-	if (!of_property_read_string(np, "input-device-name", &idev_name)) {
-		fpc1020->idev->name = idev_name;
-	} else {
-		snprintf(fpc1020->idev_name, sizeof(fpc1020->idev_name),
-			"fpc1020@%s", dev_name(dev));
-		fpc1020->idev->name = fpc1020->idev_name;
-	}
-	rc = input_register_device(fpc1020->idev);
+	mutex_init(&fpc1020->lock);
+	rc = devm_request_threaded_irq(dev, gpio_to_irq(fpc1020->irq_gpio),
+				       NULL, fpc1020_irq_handler, irqf,
+				       dev_name(dev), fpc1020);
 	if (rc) {
-		dev_err(dev, "failed to register input device\n");
+		dev_err(dev, "could not request irq %d\n",
+			gpio_to_irq(fpc1020->irq_gpio));
 		goto exit;
 	}
+	dev_dbg(dev, "requested irq %d\n", gpio_to_irq(fpc1020->irq_gpio));
+
+	/* Request that the interrupt should be wakeable */
+	enable_irq_wake(gpio_to_irq(fpc1020->irq_gpio));
+	//irq end
 
 	wake_lock_init(&fpc1020->ttw_wl, WAKE_LOCK_SUSPEND, "fpc_ttw_wl");
-	mutex_init(&fpc1020->lock);
 
+//	hw_reset(fpc1020);
 	rc = sysfs_create_group(&dev->kobj, &attribute_group);
 	if (rc) {
 		dev_err(dev, "could not create sysfs\n");
 		goto exit;
 	}
+	
+       if (of_property_read_bool(dev->of_node, "fpc,enable-on-boot")) {
+               dev_info(dev, "Enabling hardware\n");
+               (void)device_prepare(fpc1020, false);
+       }
 
-	if (of_property_read_bool(dev->of_node, "fpc,enable-on-boot")) {
-		dev_info(dev, "Enabling hardware\n");
-		(void)device_prepare(fpc1020, false);
-	}
 
 	dev_info(dev, "%s: ok\n", __func__);
 exit:
