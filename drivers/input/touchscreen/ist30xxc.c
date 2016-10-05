@@ -1571,6 +1571,7 @@ static int ist30xx_probe(struct i2c_client *client,
 	int retry = 3;
 
 	u32 info_data[2];
+        u8 tp_color;
 	struct ist30xx_data *data;
 	struct ist30xx_platform_data *pdata;
 	struct input_dev *input_dev;

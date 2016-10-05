@@ -998,6 +998,7 @@ static void fts_ctpm_read_lockdown(struct i2c_client *client, struct ft5x06_ts_d
 {
 	u8 buf[128];
 	u8 w_buf[4], r_buf[2];
+        u8 tp_color;
 	u32 i = 0, j = 0;
 	u32 k = 0;
 		struct ft5x06_ts_data *ts_data = i2c_get_clientdata(client);
