@@ -17,7 +17,7 @@
 #include <linux/platform_device.h>
 #include <linux/of.h>
 #include <linux/input.h>
-#include <linux/input/gen_vkeys.h>
+#include <linux/input/gen_vkeys_ist.h>
 
 #define MAX_BUF_SIZE	256
 #define VKEY_VER_CODE	"0x01"
@@ -31,7 +31,7 @@
 #define BORDER_ADJUST_NUM 3
 #define BORDER_ADJUST_DENOM 4
 
-struct kobject *vkey_obj;
+extern struct kobject *vkey_obj;
 static char *vkey_buf;
 
 static ssize_t vkey_show(struct kobject  *obj,
@@ -185,10 +185,9 @@ static int vkeys_probe(struct platform_device *pdev)
 				"virtualkeys.%s", pdata->name);
 	vkey_obj_attr.attr.name = name;
 
-	vkey_obj = kobject_create_and_add("board_properties", NULL);
+
 	if (!vkey_obj) {
-		dev_err(&pdev->dev, "unable to create kobject\n");
-		return -ENOMEM;
+	   vkey_obj = kobject_create_and_add("board_properties", NULL);
 	}
 
 	ret = sysfs_create_group(vkey_obj, &vkey_grp);
@@ -213,8 +212,8 @@ static int vkeys_remove(struct platform_device *pdev)
 }
 
 static struct of_device_id vkey_match_table[] = {
-	{ .compatible = "qcom,gen-vkeys",},
-	{ },
+	{.compatible = "qcom,gen-vkeys_ist",},
+	{},
 };
 
 static struct platform_driver vkeys_driver = {
@@ -222,7 +221,7 @@ static struct platform_driver vkeys_driver = {
 	.remove = vkeys_remove,
 	.driver = {
 		.owner = THIS_MODULE,
-		.name = "gen_vkeys",
+		.name = "gen_vkeys_ist",
 		.of_match_table = vkey_match_table,
 	},
 };
