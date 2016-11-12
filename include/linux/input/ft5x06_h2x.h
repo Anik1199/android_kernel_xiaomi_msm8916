@@ -3,7 +3,7 @@
  * FocalTech ft5x06 TouchScreen driver header file.
  *
  * Copyright (c) 2010  Focal tech Ltd.
- * Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
  * Copyright (C) 2016 XiaoMi, Inc.
  *
  * This software is licensed under the terms of the GNU General Public
@@ -42,8 +42,6 @@
 #define FT_TOUCH_ID_POS	 5
 #define FT_TOUCH_DOWN	   0
 #define FT_TOUCH_CONTACT	2
-#define FT_LOCKDOWN_SIZE	8
-
 
 /*register address*/
 #define FT_REG_DEV_MODE	 0x00
@@ -60,19 +58,14 @@
 #define FT_REG_FW_SUB_MIN_VER   0xB3
 
 /*Firmware vendors*/
-#define VENDOR_O_FILM		0x51
-#define VENDOR_MUTTO		0x53
-#define VENDOR_BIEL_1080P	0x3B
-#define VENDOR_TPK_1080P		 0x5C
-#define VENDOR_BIEL_720P			  0xF1
-#define VENDOR_TPK_720P			 0xF2
-
-
+#define VENDOR_BIEL		0x3B
+#define VENDOR_O_FILM		   0x51
+#define VENDOR_MUTTO			0x53
+#define VENDOR_EELY				 0x54
 #define VENDOR_WINTEK		0x89
-#define VENDOR_GIS				0x8F
+#define VENDOR_SHENCHAO		0x8F
 
-
-/*IC name*/
+/*Firmware IC name*/
 #define IC_FT5X06			   0x55
 #define IC_FT5606			   0x08
 #define IC_FT5X16			   0x0A
@@ -83,7 +76,6 @@
 #define IC_FT3316			   0x13
 #define IC_FT5436i			  0x12
 #define IC_FT5336i			  0x11
-
 
 /* power register bits*/
 #define FT_PMODE_ACTIVE	 0x00
@@ -221,7 +213,6 @@ struct Upgrade_Info {
 	u16 delay_earse_flash; /*delay of earse flash*/
 };
 
-
 struct ft5x06_ts_platform_data {
 	struct fw_upgrade_info info;
 	const char *name;
@@ -259,7 +250,6 @@ struct ft5x06_ts_data {
 	struct regulator *vdd;
 	struct regulator *vcc_i2c;
 	char fw_name[FT_FW_NAME_MAX_LEN];
-	u8 lockdown_info[FT_LOCKDOWN_SIZE];
 	bool loading_fw;
 	u8 family_id;
 	struct dentry *dir;
@@ -272,7 +262,6 @@ struct ft5x06_ts_data {
 	u8 fw_vendor_id;
 #if defined(CONFIG_FB)
 	struct notifier_block fb_notif;
-	struct work_struct fb_notify_work;
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 	struct early_suspend early_suspend;
 #endif
@@ -283,36 +272,30 @@ struct ft5x06_ts_data {
 
 
 
-#define CTP_IC_TYPE_0 0x12
-#define CTP_IC_TYPE_1 0x14
-
+#define CTP_IC_TYPE 0x14
 #define CTP_SYS_APK_UPDATE 0
 
-#define TPD_AUTO_UPGRADE 1
+#define TPD_AUTO_UPGRADE 0
 #define FTS_PROC_APK_DEBUG 1
 
 #define CTP_CHARGER_DETECT 1
 
 #define CTP_PROC_INTERFACE 1
-#define CTP_LOCKDOWN_INFO  1
 
-
-#define WT_ADD_CTP_INFO   1
-
-#define CTP_DEBUG_ON 1
+#define CTP_DEBUG_ON 0
 #define CTP_DEBUG_FUNC_ON 0
 #define CTP_INFO(fmt, arg...)		   printk("FT5X06-TP-TAG INFO:"fmt"\n", ##arg)
 
 #define CTP_ERROR(fmt, arg...)		  printk("FT5X06-TP-TAG ERROR:"fmt"\n", ##arg)
 
-#define CTP_DEBUG(fmt, arg...)		do {\
+#define CTP_DEBUG(fmt, arg...)		 do {\
 										 if (CTP_DEBUG_ON)\
 										 printk("FT5X06-TP-TAG DEBUG:[%d]"fmt"\n", __LINE__, ##arg);\
-									} while (0)
-#define CTP_DEBUG_FUNC()			do {\
+									 } while (0)
+#define CTP_DEBUG_FUNC()			 do {\
 										 if (CTP_DEBUG_FUNC_ON)\
 										 printk("FT5X06-TP-TAG Func:%s@Line:%d\n", __func__, __LINE__);\
-									} while (0)
+									 } while (0)
 
 
 #endif
