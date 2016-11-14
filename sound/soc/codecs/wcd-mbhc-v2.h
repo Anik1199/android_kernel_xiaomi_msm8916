@@ -508,4 +508,6 @@ static inline int wcd_mbhc_get_impedance(struct wcd_mbhc *mbhc,
 }
 #endif
 void wcd_mbhc_deinit(struct wcd_mbhc *mbhc);
+extern void msm8x16_wcd_codec_set_headset_state(u32 state);
+extern int msm8x16_wcd_codec_get_headset_state(void);
 #endif /* __WCD_MBHC_V2_H__ */
