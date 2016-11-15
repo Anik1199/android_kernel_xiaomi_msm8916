@@ -1,0 +1,24 @@
+# Xiaomi configuration options
+
+config MACH_XIAOMI
+	bool "XIAOMI device"
+	depends on ARCH_MSM
+	help
+	  Support for Xiaomi products
+
+config MACH_XIAOMI_MSM8916
+	bool "XIAOMI MSM8916"
+	depends on ARCH_MSM8916
+	select MACH_XIAOMI
+	help
+	  Support for MSM8916 Xiaomi variants
+
+menu "Xiaomi board selection"
+
+	config MACH_XIAOMI_IDO
+		bool "XIAOMI_IDO board"
+		select MACH_XIAOMI_MSM8916
+		help
+		  Support for Xiaomi Redmi 3/Pro variant
+
+endmenu
