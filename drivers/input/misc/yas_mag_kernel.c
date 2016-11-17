@@ -35,7 +35,6 @@
 #include <linux/earlysuspend.h>
 #endif
 #include "yas.h"
-#include <linux/hardware_info.h>
 
 #if YAS_MAG_DRIVER == YAS_MAG_DRIVER_YAS530
 #define YAS_MSM_NAME		"compass"

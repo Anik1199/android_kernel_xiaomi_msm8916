@@ -14,7 +14,6 @@
  */
 #include <linux/i2c/st480.h>
 #include <linux/sensors.h>
-#include <linux/hardware_info.h>
 #include <linux/kthread.h>
 #include <linux/workqueue.h>
 

@@ -29,7 +29,6 @@
 #include <linux/input-polldev.h>
 #include <linux/regulator/consumer.h>
 #include <linux/of.h>
-#include <linux/hardware_info.h>
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
 #include <asm/uaccess.h>
