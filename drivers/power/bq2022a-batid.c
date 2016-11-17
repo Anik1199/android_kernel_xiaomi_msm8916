@@ -22,7 +22,6 @@
 #include <linux/thermal.h>
 #include <linux/platform_device.h>
 #include "bq2022a-batid.h"
-#include <linux/hardware_info.h>
 
 
 /* BQ2022A. */

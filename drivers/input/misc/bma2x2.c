@@ -37,7 +37,6 @@
 #include <linux/regulator/consumer.h>
 #include <linux/of_gpio.h>
 #include <linux/sensors.h>
-#include <linux/hardware_info.h>
 #include <linux/kthread.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND

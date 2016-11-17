@@ -52,11 +52,6 @@
 #include <linux/earlysuspend.h>
 #endif
 
-#if  WT_ADD_CTP_INFO
-#include <linux/hardware_info.h>
-static char tp_string_version[40];
-#endif
-
 #if BOOT_UPDATE_FIRMWARE
 #include "NVT_firmware_205.h"
 static struct workqueue_struct *nvt_fwu_wq;
@@ -1776,16 +1771,6 @@ static int nvt_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 	ret = -ENODEV;
 		  goto err_check_functionality_failed;
 	}
-
-
-#if  WT_ADD_CTP_INFO
-	 if (chip_id == 5) {
-	   sprintf(tp_string_version, "NVTtouch, nt11205, fw_ver:%x", nvt_read_firmware_version());
-	 } else {
-	  sprintf(tp_string_version, "NVTtouch, unknwon, fw_ver:%x", nvt_read_firmware_version());
-	 }
-#endif
-
 
 	nvt_wq = create_workqueue("nvt_wq");
 	if (!nvt_wq) {

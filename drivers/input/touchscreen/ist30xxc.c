@@ -72,12 +72,6 @@
 #include "ist30xxc_cmcs.h"
 #endif
 
-#if  WT_ADD_CTP_INFO
-#include <linux/hardware_info.h>
-static char tp_string_version[40];
-#endif
-
-
 #if CTP_LOCKDOWN_INFO
 lockinfoH Lockdown_Info_High;
 lockinfoL Lockdown_Info_LOW;
@@ -1576,8 +1570,6 @@ static int ist30xx_probe(struct i2c_client *client,
 	struct ist30xx_data *data;
 	struct ist30xx_platform_data *pdata;
 	struct input_dev *input_dev;
-	char ic_color[64];
-
 
 	tsp_info("### IMAGIS probe(ver:%s, protocol:%X, addr:0x%02X) ###\n",
 		 IMAGIS_DD_VERSION, IMAGIS_PROTOCOL_TYPE, client->addr);
@@ -1834,39 +1826,6 @@ static int ist30xx_probe(struct i2c_client *client,
 			  Lockdown_Info_LOW.lockinfo[3], Lockdown_Info_LOW.lockinfo[2],
 			  Lockdown_Info_LOW.lockinfo[1], Lockdown_Info_LOW.lockinfo[0]);
 
-#if  WT_ADD_CTP_INFO
-		switch (Lockdown_Info_High.lockinfo[1]) {
-		case TP_White:
-			sprintf(ic_color, "%s", "White");
-			break;
-		case TP_Black:
-			sprintf(ic_color, "%s", "Black");
-			break;
-		case TP_Golden:
-			sprintf(ic_color, "%s", "Golden");
-			 break;
-		default:
-			sprintf(ic_color, "%s", "Other Color");
-			 break;
-		}
-
-		if (data->chip_id == IST30XX_CHIP_ID) {
-			switch (data->product_id) {
-			case A9FHD_PID:
-				sprintf(tp_string_version, "EBBG, ist30xx_FHD, FW:%2x, %s", data->fw.cur.fw_ver, ic_color);
-				break;
-			case A9HD_PID:
-				sprintf(tp_string_version, "EBBG, ist30xx_HD, FW:%2x, %s", data->fw.cur.fw_ver, ic_color);
-				break;
-			default:
-				sprintf(tp_string_version, "EBBG, unknwon, FW:%2x, %s", data->fw.cur.fw_ver, ic_color);
-				break;
-			}
-		} else {
-			sprintf(tp_string_version, "EBBG, unknwon, FW:%2x, %s", data->fw.cur.fw_ver, ic_color);
-		}
-
-#endif
 
 #if  WT_CTP_OPEN_SHORT_TEST
 		  global_ts_data = data;

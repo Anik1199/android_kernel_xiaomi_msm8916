@@ -39,7 +39,6 @@
 #include <linux/of_gpio.h>
 #endif
 #include <linux/elan_interface.h>
-#include <linux/hardware_info.h>
 /*********************************************************
  * configuration
 *********************************************************/

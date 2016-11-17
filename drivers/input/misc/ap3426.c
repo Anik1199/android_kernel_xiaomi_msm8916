@@ -53,7 +53,6 @@
 #include "ap3426.h"
 #include <linux/regulator/consumer.h>
 #include <linux/ioctl.h>
-#include <linux/hardware_info.h>
 
 #define AP3426_DRV_NAME		"ap3426"
 #define DRIVER_VERSION		"1.0"

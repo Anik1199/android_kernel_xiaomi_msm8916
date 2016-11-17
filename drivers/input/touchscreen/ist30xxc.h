@@ -127,7 +127,6 @@
 /* retry count */
 #define IST30XX_MAX_RETRY_CNT		(3)
 
-#define WT_ADD_CTP_INFO			  1
 #define WT_CTP_OPEN_SHORT_TEST	   1
 #define CTP_LOCKDOWN_INFO			1
 

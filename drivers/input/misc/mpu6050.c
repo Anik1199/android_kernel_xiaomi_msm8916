@@ -33,7 +33,6 @@
 #include <linux/sensors.h>
 #include "mpu6050.h"
 #include <linux/miscdevice.h>
-#include <linux/hardware_info.h>
 #include <linux/uaccess.h>
 #include <asm/uaccess.h>
 #include <linux/kthread.h>

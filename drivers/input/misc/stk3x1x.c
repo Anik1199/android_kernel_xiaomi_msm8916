@@ -46,7 +46,6 @@
 
 #endif
 #include <linux/miscdevice.h>
-#include <linux/hardware_info.h>
 #include <linux/kernel.h>
 
 #define DRIVER_VERSION  "3.10.1 20150902"

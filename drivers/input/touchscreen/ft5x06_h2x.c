@@ -35,7 +35,7 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
-#include <linux/hardware_info.h>
+
 
 #if CTP_CHARGER_DETECT
 #include <linux/power_supply.h>
@@ -2317,65 +2317,6 @@ void create_ctp_proc(void)
 }
 #endif
 
-static int hardwareinfo_set(struct ft5x06_ts_data *data, u8 value_name)
-{
-	char firmware_ver[HARDWARE_MAX_ITEM_LONGTH];
-	char vendor_for_id[HARDWARE_MAX_ITEM_LONGTH];
-	char ic_name[HARDWARE_MAX_ITEM_LONGTH];
-	int err;
-
-	if (data->fw_vendor_id == VENDOR_O_FILM)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "O-film");
-	else if (data->fw_vendor_id == VENDOR_MUTTO)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "Mutto");
-	else if (data->fw_vendor_id == VENDOR_BIEL)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "Biel");
-	else if (data->fw_vendor_id == VENDOR_WINTEK)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "WinTek");
-		else if (data->fw_vendor_id == VENDOR_EELY)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "EELY");
-		else if (data->fw_vendor_id == VENDOR_SHENCHAO)
-			snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "Shchao");
-	else
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "Other vendor");
-
-	switch (value_name) {
-	case IC_FT5X06:
-		snprintf(ic_name, strlen("FT5X06 "), "FT5X06");
-		break;
-	case IC_FT5606:
-		snprintf(ic_name, strlen("FT5606 "), "FT5606");
-		break;
-	case IC_FT5X16:
-		snprintf(ic_name, strlen("FT5X16 "), "FT5X16");
-		break;
-	case IC_FT6208:
-		snprintf(ic_name, strlen("FT6208 "), "FT6208");
-		break;
-	case IC_FT6X06:
-		snprintf(ic_name, strlen("FT6X06 "), "FT6X06");
-		break;
-	case IC_FT6X36:
-		snprintf(ic_name, strlen("FT6X36 "), "FT6X36");
-		break;
-	case IC_FT5336:
-		snprintf(ic_name, strlen("FT5336 "), "FT5336");
-		break;
-	case IC_FT3316:
-		snprintf(ic_name, strlen("FT3316 "), "FT3316");
-		break;
-	case IC_FT5436i:
-		snprintf(ic_name, strlen("FT5436i "), "FT5436i");
-		break;
-	case IC_FT5336i:
-		snprintf(ic_name, strlen("FT5336i "), "FT5336i");
-		break;
-	default:
-		snprintf(ic_name, strlen("Other IC "), "Other IC");
-	}
-	snprintf(firmware_ver, HARDWARE_MAX_ITEM_LONGTH, "%s, %s, 0x%x", vendor_for_id, ic_name, data->fw_ver[0]);
-	return 0;
-}
 #if FTS_PROC_APK_DEBUG
 int ft5x0x_i2c_Read(struct i2c_client *client, char *writebuf,
 			int writelen, char *readbuf, int readlen)
@@ -2863,10 +2804,6 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 					 data->pdata->fw_vkey_support ? "yes" : "no",
 					 data->pdata->fw_name, data->fw_ver[0],
 					 data->fw_ver[1], data->fw_ver[2]);
-
-	err = hardwareinfo_set(data, ic_name);
-	if (err < 0)
-		dev_err(&client->dev, "hardwareinfo set failed");
 
 #if defined(CONFIG_FB)
 	data->fb_notif.notifier_call = fb_notifier_callback;

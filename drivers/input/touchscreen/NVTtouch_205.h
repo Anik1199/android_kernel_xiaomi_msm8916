@@ -42,9 +42,6 @@ const uint16_t touch_key_array[TOUCH_KEY_NUM] = {
 
 #define NVT_TS_NAME "currency_tp"
 
-
-#define WT_ADD_CTP_INFO 1
-
 #define CTP_WT_TP_OPENSHORT_TEST 1
 
 

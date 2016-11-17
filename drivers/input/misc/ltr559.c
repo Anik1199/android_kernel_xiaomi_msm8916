@@ -45,8 +45,6 @@
 #include <linux/sensors.h>
 #include <linux/regulator/consumer.h>
 #include <linux/wakelock.h>
-#include <linux/hardware_info.h>
-
 
 #define SENSOR_NAME			"proximity"
 #define LTR559_DRV_NAME		"ltr559"

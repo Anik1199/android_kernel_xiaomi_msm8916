@@ -46,7 +46,6 @@
 #include <soc/qcom/scm.h>
 #include <linux/platform_device.h>
 #include <linux/pm_wakeup.h>
-#include <linux/hardware_info.h>
 
 #define FPC1020_RESET_LOW_US 1000
 #define FPC1020_RESET_HIGH1_US 100
@@ -76,8 +75,6 @@ struct fpc1020_data {
 	int  wakeup_enabled;
 	struct wake_lock	ttw_wl;
 };
-char boardid_info_fingerprint[HARDWARE_MAX_ITEM_LONGTH] = {0,};
-
 
 
 static int fpc1020_request_named_gpio(struct fpc1020_data *fpc1020,

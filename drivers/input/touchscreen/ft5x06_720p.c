@@ -34,11 +34,6 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
-#if  WT_ADD_CTP_INFO
-#include <linux/hardware_info.h>
-#endif
-
-
 #if CTP_CHARGER_DETECT
 #include <linux/power_supply.h>
 #endif
@@ -65,7 +60,7 @@ extern  u8 tp_color;
 u8 TP_Maker, LCD_Maker;
 
 #if BoardId_SUPPORT_FW
-char boardid_info_tp[HARDWARE_MAX_ITEM_LONGTH] = {0,};
+char boardid_info_tp[64] = {0,};
 #endif
 
 #define FT_DEBUG_DIR_NAME   "ts_debug"
@@ -2283,83 +2278,6 @@ static void create_ctp_proc(void)
 }
 #endif
 
-#if  WT_ADD_CTP_INFO
-static int hardwareinfo_set(struct ft5x06_ts_data *data, u8 value_name, u8 color)
-{
-	char firmware_ver[HARDWARE_MAX_ITEM_LONGTH];
-	char vendor_for_id[HARDWARE_MAX_ITEM_LONGTH];
-	char ic_name[HARDWARE_MAX_ITEM_LONGTH];
-	char ic_color[HARDWARE_MAX_ITEM_LONGTH];
-
-	if (data->fw_vendor_id == VENDOR_BIEL_1080P)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "BIEL_FHD");
-	else if (data->fw_vendor_id == VENDOR_TPK_1080P)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "TPK_FHD");
-	else if (data->fw_vendor_id == VENDOR_BIEL_720P)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "BIEL_HD");
-	else if (data->fw_vendor_id == VENDOR_TPK_720P)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "TPK_HD");
-	else if (data->fw_vendor_id == VENDOR_OUFEI_720P)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "OUFEI_HD");
-	else if (data->fw_vendor_id == VENDOR_LENS_720P)
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "LENS_HD");
-	else
-		snprintf(vendor_for_id, HARDWARE_MAX_ITEM_LONGTH, "Other vendor");
-
-	switch (value_name) {
-	case IC_FT5X06:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT5X06");
-		break;
-	case IC_FT5606:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT5606");
-		break;
-	case IC_FT5X16:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT5X16");
-		break;
-	case IC_FT6208:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT6208");
-		break;
-	case IC_FT6X06:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT6X06");
-		break;
-	case IC_FT6X36:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT6X36");
-		break;
-	case IC_FT5336:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT5336");
-		break;
-	case IC_FT3316:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT3316");
-		break;
-	case IC_FT5436i:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT5436i");
-		break;
-	case IC_FT5336i:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "FT5336i");
-		break;
-	default:
-		snprintf(ic_name, HARDWARE_MAX_ITEM_LONGTH, "Other IC");
-	}
-
-		switch (color) {
-		case TP_White:
-			snprintf(ic_color, HARDWARE_MAX_ITEM_LONGTH, "White");
-			break;
-		case TP_Black:
-			snprintf(ic_color, HARDWARE_MAX_ITEM_LONGTH, "Black");
-			break;
-		case TP_Golden:
-			snprintf(ic_color, HARDWARE_MAX_ITEM_LONGTH, "Golden");
-			break;
-		default:
-			snprintf(ic_color, HARDWARE_MAX_ITEM_LONGTH, "other Color");
-		}
-
-	snprintf(firmware_ver, HARDWARE_MAX_ITEM_LONGTH, "%s, %s, FW:0x%x, %s", vendor_for_id, ic_name, data->fw_ver[0], ic_color);
-
-	return 0;
-}
-#endif
 #if FTS_PROC_APK_DEBUG
 static int ft5x0x_i2c_Read(struct i2c_client *client, char *writebuf,
 			int writelen, char *readbuf, int readlen)
@@ -2863,12 +2781,6 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 #if CTP_LOCKDOWN_INFO
 	fts_ctpm_read_lockdown(client, data);
 #endif
-
-#if  WT_ADD_CTP_INFO
-  err = hardwareinfo_set(data, ic_name, lockdown_info[2]);
-  if (err < 0)
-		dev_err(&client->dev, "hardwareinfo set failed");
-  #endif
 
 #if defined(CONFIG_FB)
 	INIT_WORK(&data->fb_notify_work, fb_notify_resume_work);
