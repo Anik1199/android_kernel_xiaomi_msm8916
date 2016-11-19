@@ -301,3 +301,9 @@
 		qcom,vadc-thermal-node;
 	};
 };
+
+&pm8916_l16 {
+	regulator-min-microvolt = <2600000>;
+	qcom,init-voltage = <2600000>;
+	regulator-always-on;
+};
