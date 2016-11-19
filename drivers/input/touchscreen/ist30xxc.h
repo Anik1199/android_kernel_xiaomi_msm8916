@@ -104,7 +104,6 @@
 #define IST30XX_TA_RESET			(0)
 #define IST30XX_USE_KEY				(1)
 #define IST30XX_DEBUG				(1)
-#define IST30XX_CMCS_TEST			(1)
 #define IST30XX_STATUS_DEBUG		(0)
 #define IST30XX_GESTURE				(0)
 #define IST30XX_SURFACE_TOUCH		(0)
@@ -128,8 +127,6 @@
 #define IST30XX_MAX_RETRY_CNT		(3)
 
 #define WT_CTP_OPEN_SHORT_TEST	   1
-#define CTP_LOCKDOWN_INFO			1
-
 
 /* Local */
 #define TSP_LOCAL_EU				(0)

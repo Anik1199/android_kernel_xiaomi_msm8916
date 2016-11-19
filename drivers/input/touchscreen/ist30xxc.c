@@ -68,17 +68,6 @@
 #include "ist30xxc_misc.h"
 #endif
 
-#if IST30XX_CMCS_TEST
-#include "ist30xxc_cmcs.h"
-#endif
-
-#if CTP_LOCKDOWN_INFO
-lockinfoH Lockdown_Info_High;
-lockinfoL Lockdown_Info_LOW;
-extern  u8 tp_color;
-#endif
-
-
 #if CTP_CHARGER_DETECT
 #include <linux/power_supply.h>
 #endif
@@ -338,15 +327,6 @@ int ist30xx_get_ver_info(struct ist30xx_data *data)
 			data->fw.cur.main_ver, data->fw.cur.fw_ver, data->fw.cur.test_ver,
 			data->fw.cur.core_ver);
 
-	 Lockdown_Info_High.lockdowninfo = data->fw.cur.lockdown[0];
-	 Lockdown_Info_LOW.lockdowninfo = data->fw.cur.lockdown[1];
-/*
-#ifdef XIAOMI_PRODUCT
-	tsp_info("lockdown: %08X%08X, config: %08X%08X\n",
-			data->fw.cur.lockdown[0], data->fw.cur.lockdown[1],
-			data->fw.cur.config[0], data->fw.cur.config[1]);
-#endif
-*/
 	return 0;
 
 err_get_ver:
@@ -908,18 +888,6 @@ static irqreturn_t ist30xx_irq_thread(int irq, void *ptr)
 
 		goto irq_end;
 	}
-
-#if IST30XX_CMCS_TEST
-	if (((*msg & CMCS_MSG_MASK) == CM_MSG_VALID) ||
-		((*msg & CMCS_MSG_MASK) == CS_MSG_VALID) ||
-		((*msg & CMCS_MSG_MASK) == CMJIT_MSG_VALID) ||
-		((*msg & CMCS_MSG_MASK) == INT_MSG_VALID)) {
-		data->status.cmcs = *msg;
-		tsp_info("cmcs status: 0x%08x\n", *msg);
-
-		goto irq_end;
-	}
-#endif
 
 #if (IST30XX_GESTURE || IST30XX_SURFACE_TOUCH || IST30XX_BLADE_TOUCH)
 	ret = PARSE_SPECIAL_MESSAGE(*msg);
@@ -1784,12 +1752,6 @@ static int ist30xx_probe(struct i2c_client *client,
 		goto err_sysfs;
 #endif
 
-#if IST30XX_CMCS_TEST
-		  ret = ist30xx_init_cmcs_sysfs(data);
-		  if (unlikely(ret))
-					goto err_sysfs;
-#endif
-
 #if IST30XX_TRACKING_MODE
 	ret = ist30xx_init_tracking_sysfs(data);
 	if (unlikely(ret))
@@ -1819,18 +1781,6 @@ static int ist30xx_probe(struct i2c_client *client,
 	mod_timer(&event_timer, get_jiffies_64() + EVENT_TIMER_INTERVAL * 2);
 
 	ret = ist30xx_get_info(data);
-	tp_color = Lockdown_Info_High.lockinfo[1];
-	dev_info(&client->dev, "Lockdown info: %02X %02X %02X %02X %02X %02X %02X %02X",
-			  Lockdown_Info_High.lockinfo[3], Lockdown_Info_High.lockinfo[2],
-			  Lockdown_Info_High.lockinfo[1], Lockdown_Info_High.lockinfo[0],
-			  Lockdown_Info_LOW.lockinfo[3], Lockdown_Info_LOW.lockinfo[2],
-			  Lockdown_Info_LOW.lockinfo[1], Lockdown_Info_LOW.lockinfo[0]);
-
-
-#if  WT_CTP_OPEN_SHORT_TEST
-		  global_ts_data = data;
-		  create_tp_proc();
-#endif
 
 #ifdef USE_TSP_TA_CALLBACKS
 	data->callbacks.inform_charger = charger_enable;

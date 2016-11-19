@@ -85,7 +85,7 @@ else  # Target is 32-bit.
 obj-$(CONFIG_TOUCHSCREEN_FT5X06)	+= ft5x06_720p.o focal_mcap_test_lib32.a
 endif
 
-obj-$(CONFIG_TOUCHSCREEN_IST30XX) += ist30xxc.o ist30xxc_misc.o ist30xxc_sys.o ist30xxc_update.o ist30xxc_tracking.o  ist30xxc_cmcs.o
+obj-$(CONFIG_TOUCHSCREEN_IST30XX) += ist30xxc.o ist30xxc_misc.o ist30xxc_sys.o ist30xxc_update.o ist30xxc_tracking.o
 
 obj-$(CONFIG_TOUCHSCREEN_MSTAR21XX)	+= msg21xx_ts.o
 obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_RMI4_DEV)	+= synaptics_rmi_dev.o
