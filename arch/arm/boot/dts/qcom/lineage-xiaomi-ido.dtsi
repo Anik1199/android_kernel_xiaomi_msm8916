@@ -1,0 +1,39 @@
+/* Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/ {
+	memory {
+
+		pstore_reserve_mem: pstore_reserve_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
+			reg = <0x0 0xdfe00000 0x0 0x00200000>;
+			label = "pstore_reserve_mem";
+		};
+	};
+};
+
+&soc {
+	ramoops {
+		compatible = "ramoops";
+		status = "ok";
+
+		android,ramoops-buffer-start = <0xdfe00000>;
+		android,ramoops-buffer-size = <0x200000>;
+		android,ramoops-console-size = <0x50000>;
+		android,ramoops-record-size = <0x40000>;
+		android,ramoops-annotate-size = <0x1000>;
+		android,ramoops-dump-oops = <0x1>;
+	};
+
+};
