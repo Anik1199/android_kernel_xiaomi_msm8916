@@ -420,7 +420,7 @@
 
 
 	liteon@23 {
-	  	compatible = "ltr,ltr559";
+	        compatible = "ltr,ltr559";
 		reg = <0x23>;
 		pinctrl-names = "default","sleep";
 		pinctrl-0 = <&alsps_default>;
@@ -511,3 +511,4 @@
 
 };
 
+#include "lineage-xiaomi-ido.dtsi"
