@@ -585,6 +585,14 @@ static int aw2013_led_parse_child_node(struct aw2013_led *led_array,
 			goto free_pdata;
 		}
 
+		rc = of_property_read_string(temp, "linux,default-trigger",
+			&led->cdev.default_trigger);
+		if (rc < 0) {
+			dev_err(&led->client->dev,
+				"Failure reading default-trigger, rc = %d\n", rc);
+			goto free_pdata;
+		}
+
 		INIT_WORK(&led->work, aw2013_led_work);
 		led->workqueue = alloc_ordered_workqueue("aw2013_workqueue", 0);
 
