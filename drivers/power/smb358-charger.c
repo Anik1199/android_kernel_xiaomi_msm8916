@@ -2140,6 +2140,11 @@ static void smb358_external_power_changed(struct power_supply *psy)
 	smb358_chg_set_appropriate_battery_current(chip);
 	smb358_chg_set_appropriate_vddmax(chip);
 
+	if (!cw2015_psy)
+		cw2015_psy = power_supply_get_by_name("rk-bat");
+	if (cw2015_psy)
+		cw2015_psy->external_power_changed(cw2015_psy);
+
 	dev_dbg(chip->dev, "current_limit = %d\n", current_limit);
 }
 
