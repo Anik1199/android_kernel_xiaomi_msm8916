@@ -796,6 +796,16 @@ static int rk_battery_get_property(struct power_supply *psy,
 	return ret;
 }
 
+static void rk_battery_external_power_changed(struct power_supply *psy)
+{
+	struct cw_battery *cw_bat;
+	pr_debug("Notify power_supply_changed.\n");
+
+	cw_bat = container_of(psy, struct cw_battery, rk_bat);
+	rk_bat_update_status(cw_bat);
+}
+
+
 static enum power_supply_property rk_battery_properties[] = {
 	POWER_SUPPLY_PROP_CAPACITY,
 	POWER_SUPPLY_PROP_STATUS,
@@ -1168,6 +1178,7 @@ static int cw_bat_probe(struct i2c_client *client, const struct i2c_device_id *i
 	cw_bat->rk_bat.properties = rk_battery_properties;
 	cw_bat->rk_bat.num_properties = ARRAY_SIZE(rk_battery_properties);
 	cw_bat->rk_bat.get_property = rk_battery_get_property;
+	cw_bat->rk_bat.external_power_changed = rk_battery_external_power_changed;
 	ret = power_supply_register(&client->dev, &cw_bat->rk_bat);
 	if (ret < 0) {
 		dev_err(&cw_bat->client->dev, "power supply register rk_bat error\n");
