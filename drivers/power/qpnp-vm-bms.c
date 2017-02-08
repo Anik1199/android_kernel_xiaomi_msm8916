@@ -275,8 +275,8 @@ struct qpnp_bms_chip {
 	u16				charge_cycles;
 	unsigned int			start_soc;
 	unsigned int			end_soc;
-
 	unsigned int			chg_start_soc;
+
 	struct bms_battery_data		*batt_data;
 	struct bms_dt_cfg		dt;
 
@@ -315,11 +315,6 @@ struct qpnp_bms_chip {
 
 static struct qpnp_bms_chip *the_chip;
 static int get_chg_recharge_soc(struct qpnp_bms_chip *chip);
-
-
-#if defined (WT_USE_FAN54015)
-extern int fan_54015_batt_current, fan_54015_batt_ocv;
-#endif
 
 
 static struct temp_curr_comp_map temp_curr_comp_lut[] = {
@@ -2375,22 +2370,9 @@ static void monitor_soc_work(struct work_struct *work)
 
 				pr_debug("update bms_psy\n");
 				power_supply_changed(&chip->bms_psy);
-#if  defined(WT_A9_3RGB_LED)
-				msleep(50);
-				chip->batt_psy = power_supply_get_by_name("battery");
-				if (chip->batt_psy)
-					power_supply_changed(chip->batt_psy);
-#endif
-
 			} else if (chip->last_soc != chip->calculated_soc) {
 				pr_debug("update bms_psy\n");
 				power_supply_changed(&chip->bms_psy);
-#if  defined(WT_A9_3RGB_LED)
-				msleep(50);
-				chip->batt_psy = power_supply_get_by_name("battery");
-				if (chip->batt_psy)
-					power_supply_changed(chip->batt_psy);
-#endif
 			} else {
 				report_vm_bms_soc(chip);
 			}
@@ -2578,11 +2560,6 @@ static int qpnp_vm_bms_power_get_property(struct power_supply *psy,
 	return 0;
 }
 
-#if defined (WT_USE_FAN54015)
-extern int fan_54015_batt_current, fan_54015_batt_ocv;
-#endif
-
-
 static int qpnp_vm_bms_power_set_property(struct power_supply *psy,
 					enum power_supply_property psp,
 					const union power_supply_propval *val)
@@ -2594,21 +2571,11 @@ static int qpnp_vm_bms_power_set_property(struct power_supply *psy,
 	switch (psp) {
 	case POWER_SUPPLY_PROP_CURRENT_NOW:
 		chip->current_now = val->intval;
-
-#if defined (WT_USE_FAN54015)
-		fan_54015_batt_current = val->intval;
-#endif
-
 		pr_debug("IBATT = %d\n", val->intval);
 		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_OCV:
 		cancel_delayed_work_sync(&chip->monitor_soc_work);
 		chip->last_ocv_uv = val->intval;
-
-#if defined (WT_USE_FAN54015)
-		fan_54015_batt_ocv = val->intval;
-#endif
-
 		pr_debug("OCV = %d\n", val->intval);
 		schedule_delayed_work(&chip->monitor_soc_work, 0);
 		break;
@@ -4064,7 +4031,7 @@ static int parse_bms_dt_properties(struct qpnp_bms_chip *chip)
 	chip->dt.cfg_use_reported_soc = of_property_read_bool(
 			chip->spmi->dev.of_node, "qcom,use-reported-soc");
 	chip->dt.cfg_current_report_eoc = of_property_read_bool(
-			chip->spmi->dev.of_node, "qcom, current-report-eoc");
+			chip->spmi->dev.of_node, "qcom,current-report-eoc");
 	pr_debug("v_cutoff_uv=%d, max_v=%d\n", chip->dt.cfg_v_cutoff_uv,
 					chip->dt.cfg_max_voltage_uv);
 	pr_debug("r_conn=%d shutdown_soc_valid_limit=%d low_temp_threshold=%d ibat_avg_samples=%d\n",
@@ -4358,14 +4325,6 @@ static int qpnp_vm_bms_probe(struct spmi_device *spmi)
 					get_prop_bms_capacity(chip), vbatt,
 					chip->last_ocv_uv, chip->warm_reset);
 
-#if  defined(WT_A9_3RGB_LED)
-	chip->batt_psy = power_supply_get_by_name("battery");
-	if (chip->batt_psy) {
-		chip->batt_psy->bms_psy_ok = 1;
-		power_supply_changed(chip->batt_psy);
-	}
-	chip->bms_psy.bms_psy_ok = 1;
-#endif
 	return rc;
 
 fail_get_vtg:

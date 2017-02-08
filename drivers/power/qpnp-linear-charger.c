@@ -673,21 +673,6 @@ static int qpnp_lbc_is_chg_gone(struct qpnp_lbc_chip *chip)
 	return (rt_sts & CHG_GONE_BIT) ? 1 : 0;
 }
 
-
-#if defined (WT_USE_FAN54015)
-
-
-extern void fan54015_USB_startcharging(void);
-extern void  fan54015_TA_startcharging(void);
-extern void  fan54015_stopcharging(void);
-extern int fan54015_getcharge_stat(void);
-extern  bool IsUsbPlugIn, IsTAPlugIn, TrunOnChg, IsChargingOn, ResetFan54015, ChgrCFGchanged, VbusValid, OTGturnOn;
-extern  int Fan54015Voreg, Fan54015Iochg, fan_54015_batt_current, fan_54015_batt_ocv;
-extern uint   BattSOC, BattVol;
-extern int BattTemp;
-extern struct work_struct chg_fast_work;
-#endif
-
 static int qpnp_lbc_charger_enable(struct qpnp_lbc_chip *chip, int reason,
 					int enable)
 {
@@ -706,16 +691,6 @@ static int qpnp_lbc_charger_enable(struct qpnp_lbc_chip *chip, int reason,
 		goto skip;
 
 	reg_val = !!disabled ? CHG_FORCE_BATT_ON : CHG_ENABLE;
-
-
-#if defined (WT_USE_FAN54015)
-	if (reg_val == CHG_FORCE_BATT_ON) {
-		TrunOnChg = false;
-
-	} else  if (reg_val == CHG_ENABLE)
-		TrunOnChg = true;
-#endif
-
 	rc = qpnp_lbc_masked_write(chip, chip->chgr_base + CHG_CTRL_REG,
 				CHG_EN_MASK, reg_val);
 	if (rc) {
@@ -908,13 +883,6 @@ static int qpnp_lbc_vddmax_set(struct qpnp_lbc_chip *chip, int voltage)
 		return -EINVAL;
 	}
 
-#if defined (WT_USE_FAN54015)
-	if (Fan54015Voreg != voltage) {
-		Fan54015Voreg = voltage;
-		ChgrCFGchanged = true;
-	}
-#endif
-
 	spin_lock_irqsave(&chip->hw_access_lock, flags);
 	reg_val = (voltage - QPNP_LBC_VBAT_MIN_MV) / QPNP_LBC_VBAT_STEP_MV;
 	pr_debug("voltage=%d setting %02x\n", voltage, reg_val);
@@ -1068,22 +1036,8 @@ static int qpnp_lbc_ibatmax_set(struct qpnp_lbc_chip *chip, int chg_current)
 	u8 reg_val;
 	int rc;
 
-#if defined (WT_USE_FAN54015)
-	int  original_current;
-#endif
-
-
 	if (chg_current > QPNP_LBC_IBATMAX_MAX)
 		pr_debug("bad mA=%d clamping current\n", chg_current);
-
-#if defined (WT_USE_FAN54015)
-	if (Fan54015Iochg != chg_current) {
-		ChgrCFGchanged = true;
-		Fan54015Iochg = chg_current;
-		original_current = chg_current;
-		chg_current = 100;
-	}
-#endif
 
 	chg_current = clamp(chg_current, QPNP_LBC_IBATMAX_MIN,
 						QPNP_LBC_IBATMAX_MAX);
@@ -1091,13 +1045,6 @@ static int qpnp_lbc_ibatmax_set(struct qpnp_lbc_chip *chip, int chg_current)
 
 	rc = qpnp_lbc_write(chip, chip->chgr_base + CHG_IBAT_MAX_REG,
 				&reg_val, 1);
-
-
-#if defined (WT_USE_FAN54015)
-	chg_current = original_current;
-#endif
-
-
 	if (rc)
 		pr_err("Failed to set IBAT_MAX rc=%d\n", rc);
 	else
@@ -1274,10 +1221,6 @@ static int get_prop_battery_voltage_now(struct qpnp_lbc_chip *chip)
 		return 0;
 	}
 
-#if defined (WT_USE_FAN54015)
-	BattVol = results.physical;
-#endif
-
 	return results.physical;
 }
 
@@ -1346,42 +1289,11 @@ static int get_prop_charge_type(struct qpnp_lbc_chip *chip)
 
 static int get_prop_batt_status(struct qpnp_lbc_chip *chip)
 {
-
-#if defined (WT_USE_FAN54015)
-	int chg_status = 0;
-#else
-
 	int rc;
 	u8 reg_val;
-#endif
 
 	if (qpnp_lbc_is_usb_chg_plugged_in(chip) && chip->chg_done)
 		return POWER_SUPPLY_STATUS_FULL;
-
-#if defined (WT_USE_FAN54015)
-	chg_status = fan54015_getcharge_stat();
-
-	if (chg_status < 0) {
-		pr_err("Failed to read Fan54015 status! \n");
-		return POWER_SUPPLY_CHARGE_TYPE_NONE;
-	} else if (chg_status & 0x01) {
-		if (fan_54015_batt_current < 0 && fan_54015_batt_current > -100000 && fan_54015_batt_ocv > 4340000) {
-			printk(KERN_WARNING  "~ status=POWER_SUPPLY_STATUS_FULL  \n");
-			return POWER_SUPPLY_STATUS_FULL;
-		}
-		printk(KERN_WARNING  "~ status=POWER_SUPPLY_STATUS_CHARGING  \n");
-		return POWER_SUPPLY_STATUS_CHARGING;
-	} else if ((chg_status == 0) && VbusValid && (!OTGturnOn)) {
-		printk(KERN_WARNING  "~ status=POWER_SUPPLY_STATUS_CHARGING  \n");
-		return POWER_SUPPLY_STATUS_CHARGING;
-	} else if (OTGturnOn) {
-		printk(KERN_WARNING  "~ status=POWER_SUPPLY_STATUS_DISCHARGING  \n");
-		return POWER_SUPPLY_STATUS_DISCHARGING;
-	}
-	return POWER_SUPPLY_STATUS_DISCHARGING;
-
-#else
-
 
 	rc = qpnp_lbc_read(chip, chip->chgr_base + INT_RT_STS_REG,
 				&reg_val, 1);
@@ -1394,7 +1306,6 @@ static int get_prop_batt_status(struct qpnp_lbc_chip *chip)
 		return POWER_SUPPLY_STATUS_CHARGING;
 
 	return POWER_SUPPLY_STATUS_DISCHARGING;
-#endif
 }
 
 static int get_prop_current_now(struct qpnp_lbc_chip *chip)
@@ -1428,13 +1339,6 @@ static int get_prop_capacity(struct qpnp_lbc_chip *chip)
 		chip->bms_psy->get_property(chip->bms_psy,
 				POWER_SUPPLY_PROP_CAPACITY, &ret);
 		soc = ret.intval;
-
-
-#if defined (WT_USE_FAN54015)
-		BattSOC = soc;
-#endif
-
-
 		if (soc == 0) {
 			if (!qpnp_lbc_is_usb_chg_plugged_in(chip))
 				pr_warn_ratelimited("Batt 0, CHG absent\n");
@@ -1468,12 +1372,6 @@ static int get_prop_batt_temp(struct qpnp_lbc_chip *chip)
 	}
 	pr_debug("get_bat_temp %d, %lld\n", results.adc_code,
 							results.physical);
-
-
-#if defined (WT_USE_FAN54015)
-	BattTemp = (int)results.physical;
-#endif
-
 
 	return (int)results.physical;
 }
@@ -2597,20 +2495,6 @@ static irqreturn_t qpnp_lbc_usbin_valid_irq_handler(int irq, void *_chip)
 	if (chip->usb_present ^ usb_present) {
 		chip->usb_present = usb_present;
 		if (!usb_present) {
-
-
-#if defined (WT_USE_FAN54015)
-			printk(KERN_WARNING   "~Vbus Invalid.  \n");
-			IsUsbPlugIn = false;
-			IsTAPlugIn = false;
-			TrunOnChg = false;
-
-			ResetFan54015 = true;
-			VbusValid = false;
-			schedule_work(&chg_fast_work);
-#endif
-
-
 			qpnp_lbc_charger_enable(chip, CURRENT, 0);
 			spin_lock_irqsave(&chip->ibat_change_lock, flags);
 			chip->usb_psy_ma = QPNP_CHG_I_MAX_MIN_90;
@@ -2645,18 +2529,6 @@ static irqreturn_t qpnp_lbc_usbin_valid_irq_handler(int irq, void *_chip)
 			 * charging gets enabled on USB insertion
 			 * irrespective of battery SOC above resume_soc.
 			 */
-
-
-#if defined (WT_USE_FAN54015)
-
-			printk(KERN_WARNING   "~Vbus Valid.  \n");
-					 TrunOnChg = true;
-			ResetFan54015 = true;
-			VbusValid = true;
-			schedule_work(&chg_fast_work);
-#endif
-
-
 			qpnp_lbc_charger_enable(chip, SOC, 1);
 		}
 
