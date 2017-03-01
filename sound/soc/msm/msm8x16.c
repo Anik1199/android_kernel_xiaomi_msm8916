@@ -67,13 +67,13 @@
 
 #define LPASS_CSR_GP_LPAIF_PRI_PCM_PRI_MODE_MUXSEL 0x07702008
 #define EXT_CLASS_D_EN_DELAY 13000
-#define EXT_CLASS_D_DIS_DELAY 3000
 #define EXT_CLASS_D_DELAY_DELTA 2000
 
 #define AW8155A_MODE 5
 
 static struct delayed_work lineout_amp_enable;
 static struct delayed_work lineout_amp_dualmode;
+static struct delayed_work lineout_amp_disable;
 
 #define MAX_AUX_CODECS	2
 
@@ -117,10 +117,10 @@ static struct wcd_mbhc_config mbhc_cfg = {
 	.swap_gnd_mic = NULL,
 	.hs_ext_micbias = false,
 	.key_code[0] = KEY_MEDIA,
-	.key_code[1] = KEY_VOICECOMMAND,
-	.key_code[2] = KEY_VOLUMEUP,
-	.key_code[3] = KEY_VOLUMEDOWN,
-	.key_code[4] = 0,
+	.key_code[1] = KEY_VOLUMEUP,
+	.key_code[2] = KEY_VOLUMEDOWN,
+	.key_code[3] = KEY_VOICECOMMAND,
+	.key_code[4] = KEY_VOLUMEDOWN,
 	.key_code[5] = 0,
 	.key_code[6] = 0,
 	.key_code[7] = 0,
@@ -628,22 +628,6 @@ static int mi2s_rx_bit_format_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-static void msm8x16_ext_spk_control(u32 enable)
-{
-	if (enable) {
-		gpio_direction_output(EXT_SPK_AMP_GPIO, enable);
-		usleep_range(EXT_CLASS_D_EN_DELAY,
-				EXT_CLASS_D_EN_DELAY + EXT_CLASS_D_DELAY_DELTA);
-	} else {
-		gpio_direction_output(EXT_SPK_AMP_GPIO, enable);
-		usleep_range(EXT_CLASS_D_DIS_DELAY,
-				EXT_CLASS_D_DIS_DELAY + EXT_CLASS_D_DELAY_DELTA);
-	}
-
-	pr_debug("%s: %s external speaker PAs.\n", __func__,
-			enable ? "Enable" : "Disable");
-}
-
 static int loopback_mclk_get(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
@@ -789,6 +773,27 @@ static void msm8x16_ext_spk_delayed_dualmode(struct work_struct *work)
 			EXT_CLASS_D_EN_DELAY + EXT_CLASS_D_DELAY_DELTA);
 
 }
+
+static void msm8x16_ext_spk_delayed_disable(struct work_struct *work)
+{
+    int i = 0;
+
+    /* Close the headset device */
+    gpio_direction_output(EXT_SPK_AMP_HEADSET_GPIO, false);
+    usleep_range(EXT_CLASS_D_EN_DELAY,
+        EXT_CLASS_D_EN_DELAY + EXT_CLASS_D_DELAY_DELTA);
+
+    /* Close external audio PA device */
+    for(i = 0; i < AW8155A_MODE; i++) {
+        gpio_direction_output(EXT_SPK_AMP_GPIO, false);
+      //gpio_direction_output(EXT_SPK_AMP_GPIO_1, false);
+    }
+    usleep_range(EXT_CLASS_D_EN_DELAY,
+        EXT_CLASS_D_EN_DELAY + EXT_CLASS_D_DELAY_DELTA);
+
+    pr_debug("%s: Disable external speaker PAs.\n", __func__);
+}
+
 static int lineout_status_get(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
@@ -801,11 +806,11 @@ static int lineout_status_put(struct snd_kcontrol *kcontrol,
 	state = ucontrol->value.integer.value[0];
 
 	switch (state) {
+        case 0:
+		schedule_delayed_work(&lineout_amp_disable, msecs_to_jiffies(50));
+		break;
 	case 1:
 		schedule_delayed_work(&lineout_amp_enable, msecs_to_jiffies(50));
-		break;
-	case 0:
-		msm8x16_ext_spk_control(0);
 		break;
 	case 2:
 		schedule_delayed_work(&lineout_amp_dualmode, msecs_to_jiffies(50));
@@ -1939,6 +1944,7 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 	}
 	INIT_DELAYED_WORK(&lineout_amp_enable, msm8x16_ext_spk_delayed_enable);
 	INIT_DELAYED_WORK(&lineout_amp_dualmode, msm8x16_ext_spk_delayed_dualmode);
+        INIT_DELAYED_WORK(&lineout_amp_disable, msm8x16_ext_spk_delayed_disable);
 	return msm8x16_wcd_hs_detect(codec, &mbhc_cfg);
 }
 
